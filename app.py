@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, session,request, redirect, url_for, flash
 from dbconfig import *
 from controller import create_user
 import bcrypt  # For password hashing
@@ -6,15 +6,14 @@ import bcrypt  # For password hashing
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Set a secret key for flashing messages
 
+
 # Database configuration
-
-
-
 
 
 @app.route('/')
 def login():
     return render_template('login.html')
+
 
 @app.route('/login', methods=['POST'])
 def authenticate():
@@ -23,12 +22,16 @@ def authenticate():
         password = request.form['lpassword']
 
         # Authenticate the user
-        query = "SELECT * FROM users WHERE username = %s"
-        cursor.execute(query, (username,))
+        query = "SELECT * FROM users WHERE username = %s and password = %s"
+        cursor.execute(query, (username, password))
         user = cursor.fetchone()
 
-        if user and bcrypt.checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
+        if user and password:
             role_id = user['role_id']
+            # Store user information in the session
+            session['username'] = username
+            session['role_id'] = role_id
+
             if role_id == 0:
                 return redirect(url_for('teacher'))
             elif role_id == 1:
@@ -41,6 +44,22 @@ def authenticate():
             flash('Invalid username or password', 'error')
 
     return redirect(url_for('login'))
+
+
+
+@app.route('/teacher', methods=['GET'])
+def teacher():
+    # Check if the user is logged in
+    if 'username' in session:
+        logged_in_user = session['username']
+        # You can also access the role_id if needed: session['role_id']
+        return render_template('teacher_Dash.html', username=logged_in_user)
+    else:
+        # Redirect to the login page if the user is not logged in
+        return redirect(url_for('login'))
+
+
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -55,7 +74,6 @@ def register():
         flash('Registration successful. You can now login.', 'success')
         return redirect(url_for('login'))
 
-    return render_template('register.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
