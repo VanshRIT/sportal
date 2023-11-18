@@ -32,13 +32,13 @@ def authenticate():
             session['username'] = username
             session['role_id'] = role_id
 
-            if role_id == 0:
+            if role_id == 1:
                 return redirect(url_for('teacher'))
-            elif role_id == 1:
-                return redirect(url_for('counsellor'))
             elif role_id == 2:
-                return redirect(url_for('parent'))
+                return redirect(url_for('counsellor'))
             elif role_id == 4:
+                return redirect(url_for('parent'))
+            elif role_id == 0:
                 return redirect(url_for('it_manager'))
         else:
             flash('Invalid username or password', 'error')
@@ -58,6 +58,28 @@ def teacher():
         # Redirect to the login page if the user is not logged in
         return redirect(url_for('login'))
 
+@app.route('/parent', methods=['GET'])
+def parent():
+    # Check if the user is logged in
+    if 'username' in session:
+        logged_in_user = session['username']
+        # You can also access the role_id if needed: session['role_id']
+        return render_template('parent_Dash.html', username=logged_in_user)
+    else:
+        # Redirect to the login page if the user is not logged in
+        return redirect(url_for('login'))
+
+@app.route('/counsellor', methods=['GET'])
+def counsellor():
+    # Check if the user is logged in
+    if 'username' in session:
+        logged_in_user = session['username']
+        # You can also access the role_id if needed: session['role_id']
+        return render_template('counsellor_Dash.html', username=logged_in_user)
+    else:
+        # Redirect to the login page if the user is not logged in
+        return redirect(url_for('login'))
+
 
 
 
@@ -68,7 +90,7 @@ def register():
         username = request.form['username']
         password = request.form['password']
         email = request.form['email']
-        role_id = 4  # Set the role_id as needed
+        role_id = 2 # Set the role_id as needed
 
         create_user(username, password, email, role_id)
         flash('Registration successful. You can now login.', 'success')
