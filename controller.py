@@ -1,0 +1,184 @@
+from dbconfig import *
+
+# Create operation for roles
+def create_role(role_name):
+    insert_role_query = "INSERT INTO roles (role_name) VALUES (%s)"
+    cursor.execute(insert_role_query, (role_name,))
+    db_connection.commit()
+
+# Read operation for roles
+def get_roles():
+    query = "SELECT * FROM roles"
+    cursor.execute(query)
+    return cursor.fetchall()
+
+# Update operation for roles
+def update_role(role_id, new_role_name):
+    update_role_query = "UPDATE roles SET role_name = %s WHERE role_id = %s"
+    cursor.execute(update_role_query, (new_role_name, role_id))
+    db_connection.commit()
+
+# Delete operation for roles
+def delete_role(role_id):
+    delete_role_query = "DELETE FROM roles WHERE role_id = %s"
+    cursor.execute(delete_role_query, (role_id,))
+    db_connection.commit()
+
+# Create operation for users
+def create_user(username, password, email, role_id):
+    insert_user_query = "INSERT INTO users (username, password, email, role_id) VALUES (%s, %s, %s, %s)"
+    cursor.execute(insert_user_query, (username, password, email, role_id))
+    db_connection.commit()
+
+# Read operation for users
+def get_users():
+    query = "SELECT * FROM users"
+    cursor.execute(query)
+    return cursor.fetchall()
+
+# Update operation for users
+def update_user(user_id, new_username, new_password, new_email, new_role_id):
+    update_user_query = "UPDATE users SET username = %s, password = %s, email = %s, role_id = %s WHERE user_id = %s"
+    cursor.execute(update_user_query, (new_username, new_password, new_email, new_role_id, user_id))
+    db_connection.commit()
+
+# Delete operation for users
+def delete_user(user_id):
+    delete_user_query = "DELETE FROM users WHERE user_id = %s"
+    cursor.execute(delete_user_query, (user_id,))
+    db_connection.commit()
+
+# Create operation for students
+def create_student(student_name, date_of_birth):
+    insert_student_query = "INSERT INTO students (student_name, date_of_birth) VALUES (%s, %s)"
+    cursor.execute(insert_student_query, (student_name, date_of_birth))
+    db_connection.commit()
+
+# Read operation for students
+def get_students():
+    query = "SELECT * FROM students"
+    cursor.execute(query)
+    return cursor.fetchall()
+
+# Update operation for students
+def update_student(student_id, new_student_name, new_date_of_birth):
+    update_student_query = "UPDATE students SET student_name = %s, date_of_birth = %s WHERE student_id = %s"
+    cursor.execute(update_student_query, (new_student_name, new_date_of_birth, student_id))
+    db_connection.commit()
+
+# Delete operation for students
+def delete_student(student_id):
+    delete_student_query = "DELETE FROM students WHERE student_id = %s"
+    cursor.execute(delete_student_query, (student_id,))
+    db_connection.commit()
+
+# Create operation for teachers
+def create_teacher(teacher_name, email):
+    insert_teacher_query = "INSERT INTO teachers (teacher_name, email) VALUES (%s, %s)"
+    cursor.execute(insert_teacher_query, (teacher_name, email))
+    db_connection.commit()
+
+# Read operation for teachers
+def get_teachers():
+    query = "SELECT * FROM teachers"
+    cursor.execute(query)
+    return cursor.fetchall()
+
+# Update operation for teachers
+def update_teacher(teacher_id, new_teacher_name, new_email):
+    update_teacher_query = "UPDATE teachers SET teacher_name = %s, email = %s WHERE teacher_id = %s"
+    cursor.execute(update_teacher_query, (new_teacher_name, new_email, teacher_id))
+    db_connection.commit()
+
+# Delete operation for teachers
+def delete_teacher(teacher_id):
+    delete_teacher_query = "DELETE FROM teachers WHERE teacher_id = %s"
+    cursor.execute(delete_teacher_query, (teacher_id,))
+    db_connection.commit()
+
+# Create operation for attendance
+def create_attendance(student_id, teacher_id, date, status):
+    insert_attendance_query = "INSERT INTO attendance (student_id, teacher_id, date, status) VALUES (%s, %s, %s, %s)"
+    cursor.execute(insert_attendance_query, (student_id, teacher_id, date, status))
+    db_connection.commit()
+
+# Read operation for attendance
+def get_attendance():
+    query = "SELECT * FROM attendance"
+    cursor.execute(query)
+    return cursor.fetchall()
+
+# Update operation for attendance
+def update_attendance(attendance_id, new_student_id, new_teacher_id, new_date, new_status):
+    update_attendance_query = "UPDATE attendance SET student_id = %s, teacher_id = %s, date = %s, status = %s WHERE attendance_id = %s"
+    cursor.execute(update_attendance_query, (new_student_id, new_teacher_id, new_date, new_status, attendance_id))
+    db_connection.commit()
+
+# Delete operation for attendance
+def delete_attendance(attendance_id):
+    delete_attendance_query = "DELETE FROM attendance WHERE attendance_id = %s"
+    cursor.execute(delete_attendance_query, (attendance_id,))
+    db_connection.commit()
+
+# Create operation for grades
+def create_grade(student_id, teacher_id, subject, score, date):
+    insert_grade_query = "INSERT INTO grades (student_id, teacher_id, subject, score, date) VALUES (%s, %s, %s, %s, %s)"
+    cursor.execute(insert_grade_query, (student_id, teacher_id, subject, score, date))
+    db_connection.commit()
+
+# Read operation for grades
+def get_grades():
+    query = "SELECT * FROM grades"
+    cursor.execute(query)
+    return cursor.fetchall()
+
+# Update operation for grades
+def update_grade(grade_id, new_student_id, new_teacher_id, new_subject, new_score, new_date):
+    update_grade_query = "UPDATE grades SET student_id = %s, teacher_id = %s, subject = %s, score = %s, date = %s WHERE grade_id = %s"
+    cursor.execute(update_grade_query, (new_student_id, new_teacher_id, new_subject, new_score, new_date, grade_id))
+    db_connection.commit()
+
+# Delete operation for grades
+def delete_grade(grade_id):
+    delete_grade_query = "DELETE FROM grades WHERE grade_id = %s"
+    cursor.execute(delete_grade_query, (grade_id,))
+    db_connection.commit()
+
+# Create operation for tasks
+def create_task(student_id, teacher_id, task_description, status, deadline, date_created):
+    insert_task_query = "INSERT INTO tasks (student_id, teacher_id, task_description, status, deadline, date_created) VALUES (%s, %s, %s, %s, %s, %s)"
+    cursor.execute(insert_task_query, (student_id, teacher_id, task_description, status, deadline, date_created))
+    db_connection.commit()
+
+# Read operation for tasks
+def get_tasks():
+    query = "SELECT * FROM tasks"
+    cursor.execute(query)
+    return cursor.fetchall()
+
+# Update operation for tasks
+def update_task(task_id, new_student_id, new_teacher_id, new_task_description, new_status, new_deadline, new_date_created):
+    update_task_query = "UPDATE tasks SET student_id = %s, teacher_id = %s, task_description = %s, status = %s, deadline = %s, date_created = %s WHERE task_id = %s"
+    cursor.execute(update_task_query, (new_student_id, new_teacher_id, new_task_description, new_status, new_deadline, new_date_created, task_id))
+    db_connection.commit()
+
+# Delete operation for tasks
+def delete_task(task_id):
+    delete_task_query = "DELETE FROM tasks WHERE task_id = %s"
+    cursor.execute(delete_task_query, (task_id,))
+    db_connection.commit()
+
+# Create operation for messages
+def create_message(sender_id, receiver_id, message_text, timestamp):
+    insert_message_query = "INSERT INTO messages (sender_id, receiver_id, message_text, timestamp) VALUES (%s, %s, %s, %s)"
+    cursor.execute(insert_message_query, (sender_id, receiver_id, message_text, timestamp))
+    db_connection.commit()
+
+# Read operation for messages
+def get_messages():
+    query = "SELECT * FROM messages"
+    cursor.execute(query)
+    return cursor.fetchall()
+
+# Update and Delete operations for messages can be added similarly
+
