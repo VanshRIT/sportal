@@ -49,9 +49,9 @@ def delete_user(user_id):
     db_connection.commit()
 
 # Create operation for students
-def create_student(student_name, date_of_birth):
-    insert_student_query = "INSERT INTO students (student_name, date_of_birth) VALUES (%s, %s)"
-    cursor.execute(insert_student_query, (student_name, date_of_birth))
+def create_student(student_name, counsellor_id, teacher_id, parent_id):
+    insert_student_query = "INSERT INTO students (student_name, counsellor_id, teacher_id, parent_id) VALUES (%s, %s, %s, %s)"
+    cursor.execute(insert_student_query, (student_name, counsellor_id, teacher_id, parent_id))
     db_connection.commit()
 
 # Read operation for students

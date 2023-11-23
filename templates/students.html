@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Grades</title>
+    <style>
+      table {
+        width: 50%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: left;
+      }
+      input[readonly] {
+        border: none;
+        background-color: transparent;
+      }
+      .checkbox-container {
+        display: inline-block;
+        vertical-align: top;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Student Grades</h1>
+
+    <table id="gradesTable">
+      <thead>
+        <tr>
+          <th>Student Name</th>
+          <th>View Grades</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for student in students_list %}
+        <tr>
+          <td>{{ student }}</td>
+          <td><button onclick="viewGrades('{{ student }}')">Grades</button></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <button onclick="addRow()">Create</button>
+    <div class="checkbox-container"></div>
+
+    <script>
+        function addRow() {
+            var table = document.getElementById('gradesTable');
+            var newRow = table.insertRow(-1);
+    
+            var cell1 = newRow.insertCell(0);
+            var cell2 = newRow.insertCell(1);
+    
+            var input = document.createElement('input');
+            input.type = 'text';
+            cell1.appendChild(input);
+    
+            var confirmButton = document.createElement('button');
+            confirmButton.textContent = 'Confirm';
+            cell2.appendChild(confirmButton);
+    
+            confirmButton.onclick = function () {
+                input.readOnly = true;
+                sendStudentName(input.value);
+                confirmButton.style.display = 'none';
+            };
+        }
+    
+        function sendStudentName(studentName) {
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/add_student", true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.onreadystatechange = function () {
+                if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+                    console.log("Student added: " + studentName);
+                    window.location.reload();
+                }
+            };
+            xhr.send(JSON.stringify({ name: studentName }));
+        }
+
+      function viewGrades(studentName) {
+        var newWindow = window.open("", "_blank");
+        newWindow.document.write(
+          "<html><head><title>" +
+            studentName +
+            "</title></head><body><h1>" +
+            studentName +
+            "</h1></body></html>"
+        );
+        newWindow.document.close();
+      }
+    </script>
+  </body>
+</html>
