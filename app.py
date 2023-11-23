@@ -90,9 +90,10 @@ def students():
         user_id = session['user_id']
         logged_in_user = session['username']
         role_id = session['role_id']
-    else:
-        return
+        
     
+    students_list = []
+
     if role_id == 2:
         cursor.execute("SELECT * FROM counsellors WHERE user_id = %s", (user_id,))
         counsellor_details = cursor.fetchone()
@@ -100,7 +101,24 @@ def students():
         cursor.execute("SELECT * FROM students WHERE counsellor_id = %s", (counsellor_details['counsellor_id'],))
         students_list = [student['student_name'] for student in cursor.fetchall()]
 
-        return render_template('students.html', students_list=students_list)
+    
+    if role_id == 1:
+        cursor.execute("SELECT * FROM teachers WHERE user_id = %s", (user_id,))
+        teacher_details = cursor.fetchone()
+
+        cursor.execute("SELECT * FROM students WHERE teacher_id = %s", (teacher_details['teacher_id'],))
+        students_list = [student['student_name'] for student in cursor.fetchall()]
+    
+    if role_id == 3:
+        cursor.execute("SELECT * FROM parents WHERE user_id = %s", (user_id,))
+        parent_details = cursor.fetchone()
+
+        cursor.execute("SELECT * FROM students WHERE parent_id = %s", (parent_details['parent_id'],))
+        students_list = [student['student_name'] for student in cursor.fetchall()]
+
+
+    return render_template('students.html', students_list=students_list, role_id=role_id)
+    
 
 @app.route('/add_student', methods=['POST'])
 def add_student():

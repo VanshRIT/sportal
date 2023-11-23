@@ -46,9 +46,11 @@
       </tbody>
     </table>
 
-    <button onclick="addRow()">Create</button>
-    <div class="checkbox-container"></div>
-
+    {% if role_id == 2 %}
+      <button onclick="addRow()">Create</button>
+      <div class="checkbox-container"></div>
+    {% endif %}
+    
     <script>
         function addRow() {
             var table = document.getElementById('gradesTable');
