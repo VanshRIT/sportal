@@ -48,10 +48,13 @@
         {% endfor %}
       </tbody>
     </table>
-
+    
+    {% if role_id == 1 %}
     <button onclick="addGradeRow()">Add Grade</button>
     <button onclick="removeSelectedRows()">Remove Selected</button>
     <div class="checkbox-container"></div>
+    {% endif %}
+
     <script>
       function addGradeRow() {
         var table = document.getElementById("gradesRecordTable");
