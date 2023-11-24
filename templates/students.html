@@ -27,13 +27,14 @@
     </style>
   </head>
   <body>
-    <h1>Student Grades</h1>
+    <h1>Students</h1>
 
     <table id="gradesTable">
       <thead>
         <tr>
           <th>Student Name</th>
           <th>View Grades</th>
+          <th>View Tasks</th>
         </tr>
       </thead>
       <tbody>
@@ -41,6 +42,7 @@
         <tr>
           <td>{{ student }}</td>
           <td><button onclick="viewGrades('{{ student }}')">Grades</button></td>
+          <td><button onclick="viewTasks('{{ student }}')">Tasks</button></td>
         </tr>
         {% endfor %}
       </tbody>
@@ -88,6 +90,10 @@
         }
 
       function viewGrades(studentName) {
+        window.location.href = "/grades?student=" + encodeURIComponent(studentName);    
+      }
+
+      function viewTasks(studentName) {
         var newWindow = window.open("", "_blank");
         newWindow.document.write(
           "<html><head><title>" +
@@ -98,6 +104,6 @@
         );
         newWindow.document.close();
       }
-    </script>
+      </script>
   </body>
 </html>

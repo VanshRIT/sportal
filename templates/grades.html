@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grades Page</title>
+    <style>
+      table {
+        width: 80%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: left;
+      }
+      input[readonly] {
+        border: none;
+        background-color: transparent;
+      }
+      .checkbox-container {
+        display: inline-block;
+        vertical-align: top;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Grades Record</h1>
+
+    <table id="gradesRecordTable">
+      <thead>
+        <tr>
+          <!-- <th>Select</th> -->
+          <th>Subject</th>
+          <th>Grade</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for record in grades_list %}
+        <tr>
+          <td>{{record[0]}}</td>
+          <td>{{record[1]}}</td>
+          <td>{{record[2]}}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <button onclick="addGradeRow()">Add Grade</button>
+    <button onclick="removeSelectedRows()">Remove Selected</button>
+    <div class="checkbox-container"></div>
+    <script>
+      function addGradeRow() {
+        var table = document.getElementById("gradesRecordTable");
+        var newRow = table.insertRow(-1);
+
+        // Add cells for Subject, Grade, Date
+        for (var i = 0; i < 3; i++) {
+          var cell = newRow.insertCell(i);
+          var input = document.createElement("input");
+          input.type = "text";
+          cell.appendChild(input);
+        }
+
+        // Add Confirm button cell
+        var confirmCell = newRow.insertCell(3);
+        var confirmButton = document.createElement("button");
+        confirmButton.textContent = "Confirm";
+        confirmButton.onclick = function () {
+          confirmGrade(newRow);
+        };
+        confirmCell.appendChild(confirmButton);
+      }
+
+      function getQueryParam(param) {
+        var queryString = window.location.search;
+        var urlParams = new URLSearchParams(queryString);
+        return urlParams.get(param);
+    }
+
+      function confirmGrade(row) {
+        var cells = row.getElementsByTagName("input");
+        var gradeData = {
+          name: getQueryParam('student'),
+          subject: cells[0].value,
+          grade: cells[1].value,
+          date: cells[2].value,
+        };
+
+        // Send data to backend via AJAX
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/add_grade", true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.onreadystatechange = function () {
+          if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+            console.log("Grade added");
+            window.location.reload(); // Reload page on success
+          }
+        };
+        xhr.send(JSON.stringify(gradeData));
+      }
+
+      function removeSelectedRows() {
+        var table = document.getElementById("gradesRecordTable");
+        var checkboxes = document.getElementsByClassName("delete-checkbox");
+
+        for (var i = checkboxes.length - 1; i >= 0; i--) {
+          if (checkboxes[i].checked) {
+            var row = checkboxes[i].closest("tr");
+            table.deleteRow(row.rowIndex);
+            // Optionally, send delete request for each deleted row
+            // sendDeleteRequest(rowData); // Implement as needed
+          }
+        }
+      }
+
+      // Function to handle AJAX requests for add/delete can be added as needed.
+    </script>
+  </body>
+</html>
