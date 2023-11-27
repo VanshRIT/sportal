@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Tasks</title>
+    <style>
+      /* Add border styling for the table */
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        border: 2px solid #ddd;
+      }
+
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+      }
+
+      th {
+        background-color: #f2f2f2;
+      }
+
+      /* Style for the Submit File button */
+      .submitFileBtn {
+        color: blue;
+        background: none;
+        border: none;
+        cursor: pointer;
+        text-decoration: underline;
+      }
+
+      /* Your existing styles here */
+    </style>
+  </head>
+
+  <body>
+    <h2>Student Tasks</h2>
+
+    <table id="studentTable">
+      <thead>
+        <tr>
+          <th>Task</th>
+          <th>Assigned By</th>
+          <th>Assigned Date</th>
+          <th>Due Date</th>
+          <th>Status</th>
+          {% if role_id == 3 %}
+          <th>Given File</th>
+          <th>Upload File</th>
+          <th>Action</th>
+          {% else %}
+          <th>Given File</th>
+          <th>Parent File</th>
+          <th>Feedback</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for record in tasks_list %}
+        <tr>
+          <td>{{record[0]}}</td>
+          <td>{{record[1]}}</td>
+          <td>{{record[2]}}</td>
+          <td>{{record[3]}}</td>
+          <td>{{record[4]}}</td>
+          <td>
+            {% if record[5] %} 
+            {% set parts = record[5].split('\\') %} 
+            {% set parent_folder = parts[-2] %} 
+            {% set filename = parts[-1] %}
+            <a
+              href="{{ url_for('download_file', parent_folder=parent_folder, filename=filename) }}"
+              target="_blank"
+              >View File</a
+            >
+            {% else %} No File {% endif %}
+          </td>
+          <td>
+            {% if record[6] %} 
+            {% set parts = record[6].split('\\') %} 
+            {% set parent_folder = parts[-2] %} 
+            {% set filename = parts[-1] %}
+            <a
+              href="{{ url_for('download_file', parent_folder=parent_folder, filename=filename) }}"
+              target="_blank"
+              >View File</a
+            >
+            {% else %}<input
+              type="file"
+              class="fileUpload"
+              onchange="handleFileUpload(this)"
+            />{% endif %}
+          </td>
+          <td>
+            <button
+              class="submitBtn"
+              onclick="submitRow(this.parentNode.parentNode)"
+            >
+              {% if role_id == 3 %} Submit {% else %} Grade {% endif %}
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% if role_id == 1 or role_id == 2 %}
+    <div id="buttonContainer">
+      <button id="addRowBtn" onclick="addRow()">Create</button>
+      <button id="updateBtn" onclick="updateRows()">Update</button>
+      <button id="deleteBtn" onclick="deleteRows()">Delete</button>
+    </div>
+    {% endif %}
+
+    <div id="message"></div>
+
+    <script>
+      var currentId = 1; // Initialize the ID counter
+
+      function addRow() {
+        var table = document
+          .getElementById("studentTable")
+          .getElementsByTagName("tbody")[0];
+        var newRow = table.insertRow(table.rows.length);
+
+        var nameCell = newRow.insertCell(0);
+        var assignedByCell = newRow.insertCell(1);
+        var assignedDateCell = newRow.insertCell(2);
+        var dueDateCell = newRow.insertCell(3);
+        var statusCell = newRow.insertCell(4);
+        var submitFileCell = newRow.insertCell(5);
+        var actionCell = newRow.insertCell(6);
+
+        nameCell.innerHTML = "<input type='text' placeholder='Enter task'>";
+        // assignedByCell.innerHTML =
+        //   "<input type='text' placeholder='Enter name'>";
+        assignedDateCell.innerHTML = getCurrentDate();
+        dueDateCell.innerHTML =
+          "<input type='date' value='" +
+          getCurrentDate() +
+          "' onchange='validateDueDate(this)' min='" +
+          getCurrentDate() +
+          "'>";
+        statusCell.innerHTML = "ND";
+        submitFileCell.innerHTML =
+          "<input type='file' class='fileUpload' onchange='handleFileUpload(this)'>";
+        // submitFileCell.innerHTML =
+        //   "<button class='submitFileBtn' onclick='submitFile(this.parentNode.parentNode)'>Submit File</button>";
+        actionCell.innerHTML =
+          "<button class='confirmBtn' onclick='confirmRow(this.parentNode.parentNode)'>Confirm</button>";
+      }
+
+      function confirmRow(row) {
+        var cells = row.cells;
+        var formData = new FormData();
+
+        // Append text data to formData
+        formData.append("task_desc", cells[0].querySelector("input").value);
+        // formData.append("assignedby", cells[1].querySelector("input").value);
+        formData.append("assigned_date", cells[2].innerText);
+        formData.append("due_date", cells[3].querySelector("input").value);
+        formData.append("status", cells[4].innerText);
+        formData.append("student", getQueryParam("student"));
+
+        // Append file data to formData
+        var fileInput = row.querySelector(".fileUpload");
+        if (fileInput.file) {
+          formData.append("file", fileInput.file);
+        }
+
+        // Update cell contents to just text
+        for (var i = 0; i < cells.length - 2; i++) {
+          var cellContent = cells[i].innerHTML;
+          if (cellContent.includes("<input")) {
+            var inputValue = cells[i].querySelector("input").value;
+            cells[i].innerHTML = inputValue;
+          }
+          cells[i].setAttribute("contenteditable", "false");
+        }
+
+        // Send data to backend via AJAX
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/add_task", true);
+        xhr.onreadystatechange = function () {
+          if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+            console.log("Task added");
+            window.location.reload(); // Reload page on success
+          }
+        };
+        xhr.send(formData);
+
+        row.querySelector(".confirmBtn").style.display = "none";
+      }
+
+      function getQueryParam(param) {
+        var queryString = window.location.search;
+        var urlParams = new URLSearchParams(queryString);
+        return urlParams.get(param);
+      }
+
+      function submitRow(row) {
+        var cells = row.cells;
+        var formData = new FormData();
+
+        // Append task data to formData
+        formData.append("task_desc", cells[0].innerText);
+        formData.append("assignedby", cells[1].innerText);
+        formData.append("assigned_date", cells[2].innerText);
+        formData.append("due_date", cells[3].innerText);
+        formData.append("status", cells[4].innerText);
+        formData.append("student", getQueryParam("student"));
+
+        // Append file data to formData
+        var fileInput = row.querySelector(".fileUpload");
+        if (fileInput.file) {
+          formData.append("file", fileInput.file);
+        }
+
+        // Send data to backend via AJAX
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/submit_task", true); // Replace '/submit_task' with your actual backend endpoint
+        xhr.onreadystatechange = function () {
+          if (this.readyState === XMLHttpRequest.DONE) {
+            if (this.status === 200) {
+              console.log("Task submitted successfully");
+              window.location.reload(); // Reload page on success
+            }
+          }
+        };
+        xhr.send(formData);
+      }
+
+      function handleFileUpload(input) {
+        // Store the file object for later use
+        input.file = input.files[0];
+      }
+
+      function getCurrentDate() {
+        var today = new Date();
+        var dd = String(today.getDate()).padStart(2, "0");
+        var mm = String(today.getMonth() + 1).padStart(2, "0"); // January is 0!
+        var yyyy = today.getFullYear();
+
+        return yyyy + "-" + mm + "-" + dd;
+      }
+
+      function validateDueDate(input) {
+        var assignedDate = new Date(
+          document
+            .getElementById("studentTable")
+            .getElementsByTagName("tbody")[0].lastChild.cells[2].innerHTML
+        );
+        var dueDate = new Date(input.value);
+
+        if (dueDate <= assignedDate) {
+          alert("Due date must be after the assigned date.");
+          input.value = "";
+        }
+      }
+
+      // Your other functions here
+    </script>
+
+    <!-- Your existing Confirm All and Confirm Delete buttons here -->
+  </body>
+</html>

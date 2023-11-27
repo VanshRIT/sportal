@@ -145,9 +145,10 @@ def delete_grade(grade_id):
     db_connection.commit()
 
 # Create operation for tasks
-def create_task(student_id, teacher_id, task_description, status, deadline, date_created):
-    insert_task_query = "INSERT INTO tasks (student_id, teacher_id, task_description, status, deadline, date_created) VALUES (%s, %s, %s, %s, %s, %s)"
-    cursor.execute(insert_task_query, (student_id, teacher_id, task_description, status, deadline, date_created))
+def create_task(student_id, teacher_id, counsellor_id, task_description, status, deadline, date_created, file_path_parent, file_path_counsellor_teacher):
+    insert_task_query = "insert into tasks (student_id, teacher_id, counsellor_id, task_description, status, \
+        deadline, date_created, file_path_parent, file_path_counsellor_teacher) values (%s, %s, %s, %s, %s, %s, %s, %s, %s);"
+    cursor.execute(insert_task_query, (student_id, teacher_id, counsellor_id, task_description, status, deadline, date_created, file_path_parent, file_path_counsellor_teacher))
     db_connection.commit()
 
 # Read operation for tasks
