@@ -73,11 +73,57 @@ def delete_student(student_id):
     db_connection.commit()
 
 # Create operation for teachers
-def create_teacher(teacher_name, email):
-    insert_teacher_query = "INSERT INTO teachers (teacher_name, email) VALUES (%s, %s)"
-    cursor.execute(insert_teacher_query, (teacher_name, email))
-    db_connection.commit()
+def create_teacher_with_user(teacher_name, username, password, email, role_id):
+    # Start by creating a new user entry
+    insert_user_query = "INSERT INTO users (username, password, email, role_id) VALUES (%s, %s, %s, %s)"
+    user_values = (username, password, email, role_id)
 
+    cursor = db_connection.cursor()
+    try:
+        # Insert user
+        cursor.execute(insert_user_query, user_values)
+        user_id = cursor.lastrowid  # Get the newly created user ID
+        db_connection.commit()
+
+        # Insert teacher with the new user_id
+        insert_teacher_query = "INSERT INTO teachers (teacher_name, user_id) VALUES (%s, %s)"
+        teacher_values = (teacher_name, user_id)
+        cursor.execute(insert_teacher_query, teacher_values)
+        db_connection.commit()
+
+        print("Teacher added successfully")
+    except mysql.connector.Error as err:
+        print("Error occurred: ", err)
+    finally:
+        cursor.close()
+def create_counsellor_with_user(counsellor_name, username, password, email, role_id):
+    # Start by creating a new user entry
+    insert_user_query = "INSERT INTO users (username, password, email, role_id) VALUES (%s, %s, %s, %s)"
+    user_values = (username, password, email, role_id)
+
+    cursor = db_connection.cursor()
+    try:
+        # Insert user
+        cursor.execute(insert_user_query, user_values)
+        user_id = cursor.lastrowid  # Get the newly created user ID
+        db_connection.commit()
+
+        # Insert teacher with the new user_id
+        insert_teacher_query = "INSERT INTO counsellors (counsellor_name, user_id) VALUES (%s, %s)"
+        counsellor_values = (counsellor_name, user_id)
+        cursor.execute(insert_teacher_query, counsellor_values)
+        db_connection.commit()
+
+        print("Counsellor added successfully")
+    except mysql.connector.Error as err:
+        print("Error occurred: ", err)
+    finally:
+        cursor.close()
+
+def get_counsellor():
+    query = "SELECT * FROM counsellors"
+    cursor.execute(query)
+    return cursor.fetchall()
 # Read operation for teachers
 def get_teachers():
     query = "SELECT * FROM teachers"
@@ -145,10 +191,10 @@ def delete_grade(grade_id):
     db_connection.commit()
 
 # Create operation for tasks
-def create_task(student_id, teacher_id, counsellor_id, task_description, status, deadline, date_created, file_path_parent, file_path_counsellor_teacher):
-    insert_task_query = "insert into tasks (student_id, teacher_id, counsellor_id, task_description, status, \
-        deadline, date_created, file_path_parent, file_path_counsellor_teacher) values (%s, %s, %s, %s, %s, %s, %s, %s, %s);"
-    cursor.execute(insert_task_query, (student_id, teacher_id, counsellor_id, task_description, status, deadline, date_created, file_path_parent, file_path_counsellor_teacher))
+def create_task(student_id, teacher_id, counsellor_id, task_description,subject, status, deadline, date_created, file_path_parent, file_path_counsellor_teacher):
+    insert_task_query = "insert into tasks (student_id, teacher_id, counsellor_id, task_description, subject, status, \
+        deadline, date_created, file_path_parent, file_path_counsellor_teacher) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
+    cursor.execute(insert_task_query, (student_id, teacher_id, counsellor_id, task_description,subject, status, deadline, date_created, file_path_parent, file_path_counsellor_teacher))
     db_connection.commit()
 
 # Read operation for tasks
@@ -181,5 +227,10 @@ def get_messages():
     cursor.execute(query)
     return cursor.fetchall()
 
+def get_student_by_user_id(user_id):
+    query = " SELECT students.student_id, students.student_name FROM students JOIN parents ON students.parent_id = parents.parent_id JOIN users ON parents.user_id = users.user_id WHERE users.user_id = %s;"
+    cursor.execute(query, (user_id,))
+    result = cursor.fetchall()
+    return result
 # Update and Delete operations for messages can be added similarly
 

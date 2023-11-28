@@ -1,0 +1,108 @@
+{% extends 'Teacher-Dash/base.html' %}
+
+{% block content %}
+    <!-- Add your dashboard-specific content here -->
+    <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Grades</title>
+    <style>
+      table {
+        width: 50%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: left;
+      }
+      input[readonly] {
+        border: none;
+        background-color: transparent;
+      }
+      .checkbox-container {
+        display: inline-block;
+        vertical-align: top;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Students</h1>
+
+    <table id="gradesTable">
+      <thead>
+        <tr>
+          <th>Student Name</th>
+          <th>View Grades</th>
+          <th>View Tasks</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for student in students_list %}
+        <tr>
+          <td>{{ student }}</td>
+          <td><button onclick="viewGrades('{{ student }}')">Grades</button></td>
+          <td><button onclick="viewTasks('{{ student }}')">Tasks</button></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% if role_id == 2 %}
+    <button onclick="addRow()">Create</button>
+    <button onclick="toggleDeleteMode()">Delete</button>
+    <div class="checkbox-container"></div>
+    {% endif %}
+
+    <script>
+      function addRow() {
+        var table = document.getElementById("gradesTable");
+        var newRow = table.insertRow(-1);
+
+        var cell1 = newRow.insertCell(0);
+        var cell2 = newRow.insertCell(1);
+
+        var input = document.createElement("input");
+        input.type = "text";
+        cell1.appendChild(input);
+
+        var confirmButton = document.createElement("button");
+        confirmButton.textContent = "Confirm";
+        cell2.appendChild(confirmButton);
+
+        confirmButton.onclick = function () {
+          input.readOnly = true;
+          sendStudentName(input.value);
+          confirmButton.style.display = "none";
+        };
+      }
+
+      function sendStudentName(studentName) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/add_student", true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.onreadystatechange = function () {
+          if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+            console.log("Student added: " + studentName);
+            window.location.reload();
+          }
+        };
+        xhr.send(JSON.stringify({ name: studentName }));
+      }
+      var deleteMode = false;
+
+      function viewGrades(studentName) {
+        window.location.href =
+          "/grades?student=" + encodeURIComponent(studentName);
+      }
+
+      function viewTasks(studentName) {
+        window.location.href =
+          "/tasks?student=" + encodeURIComponent(studentName);
+      }
+    </script>
+  </body>
+{% endblock %}

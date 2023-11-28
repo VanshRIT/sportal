@@ -1,0 +1,39 @@
+{% extends 'it-manager-Dash/base.html' %}
+
+{% block content %}
+<h1 class="form-title">Counsellor</h1>
+<form action="{{ url_for('add_counsellor') }}" method="post" class="teacher-form">
+    <div class="form-group">
+        <label for="counsellor_name" class="form-label">Counsellor Name:</label>
+        <input type="text" id="counsellor_name" name="counsellor_name" class="form-input" required>
+    </div>
+
+    <div class="form-group">
+        <label for="username" class="form-label">Username:</label>
+        <input type="text" id="username" name="username" class="form-input" required>
+    </div>
+
+    <div class="form-group">
+        <label for="password" class="form-label">Password:</label>
+        <input type="password" id="password" name="password" class="form-input" required>
+    </div>
+
+    <div class="form-group">
+        <label for="email" class="form-label">Email:</label>
+        <input type="email" id="email" name="email" class="form-input" required>
+    </div>
+
+    <input type="submit" value="Add Counsellor" class="submit-btn">
+</form>
+
+<ul class="teacher-list">
+<h2>List of Existing Counsellor's</h2>
+    {% for counsellor in counsellors %}
+        <li class="teacher-item">
+            {{ counsellor.counsellor_name }} - {{ counsellor.email }}
+            <a href="/delete/{{ counsellor.counsellor_id }}" class="delete-link">Delete</a>
+        </li>
+    {% endfor %}
+</ul>
+
+{% endblock %}
