@@ -24,19 +24,19 @@ a {
   align-items: center;
   justify-content: right;
   padding: 0 16px;
-  background-color: #f6f4fc;
+  /*background-color: #f6f4fc;*/
   margin: 0 20px;
 }
 
-.content {
-  display: flex;
-  justify-content: center;
-  align-items: top;
-  flex: 1;
-  margin: 5.5em 0;
-  width: 100%;
-  min-width: 260px;
-}
+/*.content {*/
+/*  display: flex;*/
+/*  justify-content: center;*/
+/*  align-items: top;*/
+/*  flex: 1;*/
+/*  margin: 5.5em 0;*/
+/*  width: 100%;*/
+/*  min-width: 260px;*/
+/*}*/
 
 .main-header {
   background-color: #fefefe;
@@ -319,4 +319,90 @@ form input {
     width: 80px; /* Adjust the width as needed */
     height: auto; /* Maintain aspect ratio */
     max-height: 80px; /* Set a maximum height to maintain readability */
+}
+.content {
+  /*display: flex;*/
+  justify-content: center;
+  /*flex: 1;*/
+  margin-left: 32em ;
+  margin-top: 10em;
+  /*width: 60%;*/
+  min-width: 260px;
+  /*background-color: #fff; !* Add a background color *!*/
+  /*border-radius: 10px; !* Rounded corners *!*/
+  /*box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2); !* Drop shadow for depth *!*/
+  padding: 20px; /* Internal padding */
+  /*border: 1px solid #dcdce6; !* Subtle border *!*/
+  /*z-index: 4;*/
+}
+
+/*Forms - CSS*/
+.form-title {
+    color: #333;
+    text-align: center;
+}
+
+.teacher-form {
+    /*background: #fff;*/
+    padding: 20px;
+    border-radius: 8px;
+    /*box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);*/
+    margin-bottom: 30px;
+    margin-top: 4em;
+    min-width: 38em;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.submit-btn {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background-color: #5cb85c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.submit-btn:hover {
+    background-color: #4cae4c;
+}
+
+.teacher-list {
+    list-style: none;
+    padding: 0;
+}
+
+.teacher-item {
+    background: #e9e9e9;
+    padding: 10px;
+    margin-left: 20px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+}
+
+.delete-link {
+    color: #d9534f;
+    text-decoration: none;
+    margin-left: 10px;
+}
+
+.delete-link:hover {
+    text-decoration: underline;
 }

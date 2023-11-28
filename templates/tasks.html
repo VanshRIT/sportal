@@ -43,6 +43,7 @@
       <thead>
         <tr>
           <th>Task</th>
+          <th>Subject</th>
           <th>Assigned By</th>
           <th>Assigned Date</th>
           <th>Due Date</th>
@@ -66,10 +67,11 @@
           <td>{{record[2]}}</td>
           <td>{{record[3]}}</td>
           <td>{{record[4]}}</td>
-          <td>
-            {% if record[5] %} 
-            {% set parts = record[5].split('\\') %} 
-            {% set parent_folder = parts[-2] %} 
+          <td>{{record[5]}}</td>
+            <td>
+            {% if record[6] %}
+            {% set parts = record[6].split('\\') %}
+            {% set parent_folder = parts[-2] %}
             {% set filename = parts[-1] %}
             <a
               href="{{ url_for('download_file', parent_folder=parent_folder, filename=filename) }}"
@@ -79,9 +81,9 @@
             {% else %} No File {% endif %}
           </td>
           <td>
-            {% if record[6] %} 
-            {% set parts = record[6].split('\\') %} 
-            {% set parent_folder = parts[-2] %} 
+            {% if record[7] %}
+            {% set parts = record[7].split('\\') %}
+            {% set parent_folder = parts[-2] %}
             {% set filename = parts[-1] %}
             <a
               href="{{ url_for('download_file', parent_folder=parent_folder, filename=filename) }}"
@@ -95,12 +97,21 @@
             />{% endif %}
           </td>
           <td>
+              {% if role_id == 3 %}
             <button
               class="submitBtn"
               onclick="submitRow(this.parentNode.parentNode)"
             >
-              {% if role_id == 3 %} Submit {% else %} Grade {% endif %}
+               Submit
+
             </button>
+               {% else %} <button
+              class="submitBtn"
+              onclick="gradeSubjectMarks()"
+            >
+               Grade
+
+            </button> {% endif %}
           </td>
         </tr>
         {% endfor %}
@@ -118,150 +129,95 @@
     <div id="message"></div>
 
     <script>
-      var currentId = 1; // Initialize the ID counter
+  function addRow() {
+    var table = document.getElementById("studentTable").getElementsByTagName("tbody")[0];
+    var newRow = table.insertRow(table.rows.length);
 
-      function addRow() {
-        var table = document
-          .getElementById("studentTable")
-          .getElementsByTagName("tbody")[0];
-        var newRow = table.insertRow(table.rows.length);
+    var nameCell = newRow.insertCell(0);
+    var subjectCell = newRow.insertCell(1); // Subject cell
+    var assignedByCell = newRow.insertCell(2); // Assigned By cell
+    var assignedDateCell = newRow.insertCell(3); // Assigned Date cell
+    var dueDateCell = newRow.insertCell(4); // Due Date cell
+    var statusCell = newRow.insertCell(5); // Status cell
+    var submitFileCell = newRow.insertCell(6); // Submit File cell
+    var actionCell = newRow.insertCell(7); // Action cell
 
-        var nameCell = newRow.insertCell(0);
-        var assignedByCell = newRow.insertCell(1);
-        var assignedDateCell = newRow.insertCell(2);
-        var dueDateCell = newRow.insertCell(3);
-        var statusCell = newRow.insertCell(4);
-        var submitFileCell = newRow.insertCell(5);
-        var actionCell = newRow.insertCell(6);
+    // Populate cells with inputs, selects, and buttons
+    nameCell.innerHTML = "<input type='text' placeholder='Enter task'>";
+    subjectCell.innerHTML = "<select><option value=''>Select Subject</option><option value='Math'>Math</option><option value='Science'>Science</option><option value='History'>History</option></select>";
+    assignedDateCell.innerHTML = getCurrentDate();
+    dueDateCell.innerHTML = "<input type='date' value='" + getCurrentDate() + "' onchange='validateDueDate(this)' min='" + getCurrentDate() + "'>";
+    statusCell.innerHTML = "ND";
+    submitFileCell.innerHTML = "<input type='file' class='fileUpload' onchange='handleFileUpload(this)'>";
+    actionCell.innerHTML = "<button class='confirmBtn' onclick='confirmRow(this.parentNode.parentNode)'>Confirm</button>";
+  }
 
-        nameCell.innerHTML = "<input type='text' placeholder='Enter task'>";
-        // assignedByCell.innerHTML =
-        //   "<input type='text' placeholder='Enter name'>";
-        assignedDateCell.innerHTML = getCurrentDate();
-        dueDateCell.innerHTML =
-          "<input type='date' value='" +
-          getCurrentDate() +
-          "' onchange='validateDueDate(this)' min='" +
-          getCurrentDate() +
-          "'>";
-        statusCell.innerHTML = "ND";
-        submitFileCell.innerHTML =
-          "<input type='file' class='fileUpload' onchange='handleFileUpload(this)'>";
-        // submitFileCell.innerHTML =
-        //   "<button class='submitFileBtn' onclick='submitFile(this.parentNode.parentNode)'>Submit File</button>";
-        actionCell.innerHTML =
-          "<button class='confirmBtn' onclick='confirmRow(this.parentNode.parentNode)'>Confirm</button>";
+  function confirmRow(row) {
+    var formData = new FormData();
+    var cells = row.cells;
+
+    // Append text data to formData
+    formData.append("subject",cells[1].querySelector("select").value);
+    formData.append("task_desc", cells[0].querySelector("input").value);
+    formData.append("assigned_date", cells[3].innerText);
+    formData.append("due_date", cells[4].querySelector("input").value);
+    formData.append("status", cells[5].innerText);
+    formData.append("student", getQueryParam("student"));
+    console.log(formData)
+
+    // Append file data to formData
+    var fileInput = cells[6].querySelector(".fileUpload");
+    if (fileInput && fileInput.files[0]) {
+      formData.append("file", fileInput.files[0]);
+    }
+
+    // Send data to backend via AJAX
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "/add_task", true);
+    xhr.onreadystatechange = function () {
+      if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+        console.log("Task added");
+        window.location.reload(); // Reload page on success
       }
+    };
+    xhr.send(formData);
 
-      function confirmRow(row) {
-        var cells = row.cells;
-        var formData = new FormData();
+    row.querySelector(".confirmBtn").style.display = "none";
+  }
 
-        // Append text data to formData
-        formData.append("task_desc", cells[0].querySelector("input").value);
-        // formData.append("assignedby", cells[1].querySelector("input").value);
-        formData.append("assigned_date", cells[2].innerText);
-        formData.append("due_date", cells[3].querySelector("input").value);
-        formData.append("status", cells[4].innerText);
-        formData.append("student", getQueryParam("student"));
+  function getQueryParam(param) {
+    var queryString = window.location.search;
+    var urlParams = new URLSearchParams(queryString);
+    return urlParams.get(param);
+  }
 
-        // Append file data to formData
-        var fileInput = row.querySelector(".fileUpload");
-        if (fileInput.file) {
-          formData.append("file", fileInput.file);
-        }
+  function handleFileUpload(input) {
+    // Store the file object for later use
+    if (input.files && input.files[0]) {
+      input.file = input.files[0];
+    }
+  }
 
-        // Update cell contents to just text
-        for (var i = 0; i < cells.length - 2; i++) {
-          var cellContent = cells[i].innerHTML;
-          if (cellContent.includes("<input")) {
-            var inputValue = cells[i].querySelector("input").value;
-            cells[i].innerHTML = inputValue;
-          }
-          cells[i].setAttribute("contenteditable", "false");
-        }
+  function getCurrentDate() {
+    var today = new Date();
+    return today.toISOString().split('T')[0];
+  }
 
-        // Send data to backend via AJAX
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", "/add_task", true);
-        xhr.onreadystatechange = function () {
-          if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-            console.log("Task added");
-            window.location.reload(); // Reload page on success
-          }
-        };
-        xhr.send(formData);
+  function validateDueDate(input) {
+    var assignedDate = new Date(getCurrentDate());
+    var dueDate = new Date(input.value);
 
-        row.querySelector(".confirmBtn").style.display = "none";
-      }
+    if (dueDate <= assignedDate) {
+      alert("Due date must be after the assigned date.");
+      input.value = getCurrentDate();
+    }
+  }
+   function gradeSubjectMarks() {
+       var marks = prompt("Enter the marks:");
+       var feedback = prompt("Enter your Feedback:");
 
-      function getQueryParam(param) {
-        var queryString = window.location.search;
-        var urlParams = new URLSearchParams(queryString);
-        return urlParams.get(param);
-      }
-
-      function submitRow(row) {
-        var cells = row.cells;
-        var formData = new FormData();
-
-        // Append task data to formData
-        formData.append("task_desc", cells[0].innerText);
-        formData.append("assignedby", cells[1].innerText);
-        formData.append("assigned_date", cells[2].innerText);
-        formData.append("due_date", cells[3].innerText);
-        formData.append("status", cells[4].innerText);
-        formData.append("student", getQueryParam("student"));
-
-        // Append file data to formData
-        var fileInput = row.querySelector(".fileUpload");
-        if (fileInput.file) {
-          formData.append("file", fileInput.file);
-        }
-
-        // Send data to backend via AJAX
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", "/submit_task", true); // Replace '/submit_task' with your actual backend endpoint
-        xhr.onreadystatechange = function () {
-          if (this.readyState === XMLHttpRequest.DONE) {
-            if (this.status === 200) {
-              console.log("Task submitted successfully");
-              window.location.reload(); // Reload page on success
-            }
-          }
-        };
-        xhr.send(formData);
-      }
-
-      function handleFileUpload(input) {
-        // Store the file object for later use
-        input.file = input.files[0];
-      }
-
-      function getCurrentDate() {
-        var today = new Date();
-        var dd = String(today.getDate()).padStart(2, "0");
-        var mm = String(today.getMonth() + 1).padStart(2, "0"); // January is 0!
-        var yyyy = today.getFullYear();
-
-        return yyyy + "-" + mm + "-" + dd;
-      }
-
-      function validateDueDate(input) {
-        var assignedDate = new Date(
-          document
-            .getElementById("studentTable")
-            .getElementsByTagName("tbody")[0].lastChild.cells[2].innerHTML
-        );
-        var dueDate = new Date(input.value);
-
-        if (dueDate <= assignedDate) {
-          alert("Due date must be after the assigned date.");
-          input.value = "";
-        }
-      }
-
-      // Your other functions here
+      alert("Feedback submitted"+ marks + feedback)
+    }
     </script>
 
     <!-- Your existing Confirm All and Confirm Delete buttons here -->

@@ -1,21 +1,19 @@
 from flask import Flask, render_template, session, request, redirect, url_for, flash, jsonify, send_from_directory
-from dbconfig import *
 from controller import *
 import os
 from werkzeug.utils import secure_filename
-
 
 app = Flask(__name__)
 
 app.secret_key = 'your_secret_key'
 
-UPLOAD_FOLDER = r'C:\Users\prana\Documents\GitHub\sportal\files_uploaded'
+UPLOAD_FOLDER = r'files_uploaded'
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 
 
 def allowed_file(filename):
     return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 @app.route('/')
@@ -48,11 +46,24 @@ def authenticate():
             elif role_id == 3:
                 return redirect(url_for('parent'))
             elif role_id == 0:
-                return redirect(url_for('it_manager'))
+                return redirect(url_for('it_admin'))
         else:
             flash('Invalid username or password', 'error')
 
     return redirect(url_for('login'))
+
+
+@app.route('/it-admin')
+def it_admin():
+    # Check if the user is logged in
+    if 'username' in session and 'role_id' in session:
+        logged_in_user = session['username']
+        role_id = session['role_id']
+        # You cana also access the role_id if needed: session['role_id']
+        return render_template('it-manager-Dash.html', username=logged_in_user)
+    else:
+        # Redirect to the login page if the user is not logged in
+        return redirect(url_for('login'))
 
 
 @app.route('/teacher', methods=['GET'])
@@ -121,6 +132,7 @@ def students():
                        (teacher_details['teacher_id'],))
         students_list = [student['student_name']
                          for student in cursor.fetchall()]
+        return render_template('Teacher-Dash/view/view_student.html', students_list=students_list, role_id=role_id)
 
     if role_id == 3:
         cursor.execute("SELECT * FROM parents WHERE user_id = %s", (user_id,))
@@ -131,8 +143,7 @@ def students():
         students_list = [student['student_name']
                          for student in cursor.fetchall()]
 
-    return render_template('students.html', students_list=students_list, role_id=role_id)
-
+    return render_template('Parent-Dash/view/view_student.html', students_list=students_list, role_id=role_id)
 
 @app.route('/add_student', methods=['POST'])
 def add_student():
@@ -197,25 +208,27 @@ def tasks():
 
     cursor.execute("SELECT * FROM tasks WHERE student_id = %s",
                    (student_details['student_id'],))
-    tasks_list = [[tasks['task_description'], tasks['teacher_id'], tasks['counsellor_id'], tasks['date_created'],
-                   tasks['deadline'], tasks['status'], tasks['file_path_counsellor_teacher'], tasks['file_path_parent'], tasks['task_id']] for tasks in cursor.fetchall()]
+    tasks_list = [[tasks['task_description'],tasks['subject'], tasks['teacher_id'], tasks['counsellor_id'], tasks['date_created'],
+                   tasks['deadline'], tasks['status'], tasks['file_path_counsellor_teacher'], tasks['file_path_parent'],
+                   tasks['task_id']] for tasks in cursor.fetchall()]
 
     for task in tasks_list:
-        if int(task[1]) > 0:
+        if int(task[2]) > 0:
             cursor.execute(
-                "SELECT teacher_name from teachers where teacher_id = %s", (task[1],))
-            task[1] = cursor.fetchone()['teacher_name']
+                "SELECT teacher_name from teachers where teacher_id = %s", (task[2],))
+            task[2] = cursor.fetchone()['teacher_name']
+
+            task.pop(3)
+            continue
+
+        if int(task[3]) > 0:
+            cursor.execute(
+                "SELECT counsellor_name from counsellors where counsellor_id = %s", (task[3],))
+            task[3] = cursor.fetchone()['counsellor_name']
 
             task.pop(2)
             continue
 
-        if int(task[2]) > 0:
-            cursor.execute(
-                "SELECT counsellor_name from counsellors where counsellor_id = %s", (task[2],))
-            task[2] = cursor.fetchone()['counsellor_name']
-
-            task.pop(1)
-            continue
 
     return render_template('tasks.html', tasks_list=tasks_list, role_id=role_id)
 
@@ -228,11 +241,11 @@ def add_task():
         role_id = session['role_id']
 
     data = request.form.to_dict()
+    print(data)
 
     cursor.execute(
         "SELECT student_id FROM students WHERE student_name = %s", (data['student'],))
     student_id = cursor.fetchone()['student_id']
-
 
     counsellor_id = 0
     teacher_id = 0
@@ -240,8 +253,8 @@ def add_task():
     if role_id == 1:
         cursor.execute(
             "SELECT teacher_id FROM teachers WHERE user_id = %s", (user_id,)
-            )
-        
+        )
+
         teacher_id = cursor.fetchone()['teacher_id']
     elif role_id == 2:
         cursor.execute(
@@ -250,7 +263,7 @@ def add_task():
         counsellor_id = cursor.fetchone()['counsellor_id']
 
     file_path = None
-      # File upload handling
+    # File upload handling
     if 'file' in request.files:
         file = request.files['file']
         if file and allowed_file(file.filename):
@@ -258,12 +271,10 @@ def add_task():
             file_path = os.path.join(UPLOAD_FOLDER, "counsellor_teacher", filename)
             file.save(file_path)
 
-
     create_task(student_id, teacher_id, counsellor_id,
-                data['task_desc'], data['status'], data['due_date'], data['assigned_date'], None, file_path)
+                data['task_desc'],data['subject'], data['status'], data['due_date'], data['assigned_date'], None, file_path)
 
     return jsonify({'status': 'success'})
-
 
 
 @app.route('/submit_task', methods=['POST'])
@@ -279,14 +290,13 @@ def submit_task():
         "SELECT student_id FROM students WHERE student_name = %s", (data['student'],))
     student_id = cursor.fetchone()['student_id']
 
-
     counsellor_id = 0
     teacher_id = 0
 
     cursor.execute(
         "SELECT teacher_id FROM teachers WHERE teacher_name = %s", (data['assignedby'],)
-        )
-    
+    )
+
     record = cursor.fetchone()
     if record:
         teacher_id = record['teacher_id']
@@ -299,7 +309,7 @@ def submit_task():
         counsellor_id = record['counsellor_id']
 
     file_path = None
-      # File upload handling
+    # File upload handling
     if 'file' in request.files:
         file = request.files['file']
         if file and allowed_file(file.filename):
@@ -309,10 +319,17 @@ def submit_task():
 
     print((student_id, teacher_id, counsellor_id, data['task_desc'], data['assignedby'], role_id))
 
-    cursor.execute('UPDATE tasks SET status = "D" WHERE student_id = %s and teacher_id = %s and counsellor_id = %s and task_description = %s', (student_id, teacher_id, counsellor_id, data['task_desc']))
-    cursor.execute('UPDATE tasks SET file_path_parent=%s WHERE student_id = %s and teacher_id = %s and counsellor_id = %s and task_description = %s', (file_path, student_id, teacher_id, counsellor_id, data['task_desc']))
+    cursor.execute(
+        'UPDATE tasks SET status = "D" WHERE student_id = %s and teacher_id = %s and counsellor_id = %s and '
+        'task_description = %s',
+        (student_id, teacher_id, counsellor_id, data['task_desc']))
+    cursor.execute(
+        'UPDATE tasks SET file_path_parent = %s WHERE student_id = %s and teacher_id = %s and counsellor_id = %s and '
+        'task_description = %s',
+        (file_path, student_id, teacher_id, counsellor_id, data['task_desc']))
 
     return jsonify({'status': 'success'})
+
 
 @app.route('/download_file/<parent_folder>/<filename>')
 def download_file(parent_folder, filename):
@@ -333,6 +350,79 @@ def register():
         create_user(username, password, email, role_id)
         flash('Registration successful. You can now login.', 'success')
         return redirect(url_for('login'))
+
+
+@app.route('/view_teacher')
+def index():
+    teachers = get_teachers()
+    return render_template('it-manager-Dash/view/view_teacher.html', teachers=teachers)
+
+
+# Route to add a new teacher
+@app.route('/add_teacher', methods=['POST'])
+def add_teacher():
+    teacher_name = request.form['teacher_name']
+    email = request.form['email']
+    username = request.form['username']
+    password = request.form['password']
+    role_id = '1'
+    # for k,v in request.form.items():
+    #     print(k,v)
+    create_teacher_with_user(teacher_name, username, password, email, role_id)
+    return redirect(url_for('view_teacher'))
+
+
+# Route to update a teacher
+@app.route('/update_teacher', methods=['POST'])
+def update():
+    teacher_id = request.form['id']
+    new_teacher_name = request.form['name']
+    new_email = request.form['email']
+    update_teacher(teacher_id, new_teacher_name, new_email)
+    return redirect('/')
+
+
+# Route to delete a teacher
+@app.route('/delete/<int:teacher_id>')
+def delete(teacher_id):
+    delete_teacher(teacher_id)
+    return redirect('/')
+
+@app.route('/view_counsellor')
+def view_counsellor():
+    counsellors = get_counsellor()
+    return render_template('it-manager-Dash/view/view_counsellor.html', counsellors=counsellors)
+
+
+# Route to add a new counsellor
+@app.route('/add_counsellor', methods=['POST'])
+def add_counsellor():
+    counsellor_name = request.form['counsellor_name']
+    email = request.form['email']
+    username = request.form['username']
+    password = request.form['password']
+    role_id = '2'
+    # for k,v in request.form.items():
+    #     print(k,v)
+    create_counsellor_with_user(counsellor_name, username, password, email, role_id)
+    return redirect(url_for('view_counsellor'))
+
+
+# Route to update a counsellor
+@app.route('/update_counsellor', methods=['POST'])
+def update_counsellor():
+    counsellor_id = request.form['id']
+    new_counsellor_name = request.form['name']
+    new_email = request.form['email']
+    update_counsellor(counsellor_id, new_counsellor_name, new_email)
+    return redirect('/')
+
+
+# Route to delete a counsellor
+@app.route('/delete/<int:counsellor_id>')
+def delete_counsellor(counsellor_id):
+    delete_counsellor(counsellor_id)
+    return redirect('/')
 
 
 if __name__ == '__main__':

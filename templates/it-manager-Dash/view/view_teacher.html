@@ -1,0 +1,41 @@
+{% extends 'it-manager-Dash/base.html' %}
+
+{% block content %}
+
+<!-- This could be part of a larger HTML file with Jinja template inheritance -->
+<h1 class="form-title">Teacher</h1>
+<form action="{{ url_for('add_teacher') }}" method="post" class="teacher-form">
+    <div class="form-group">
+        <label for="teacher_name" class="form-label">Teacher Name:</label>
+        <input type="text" id="teacher_name" name="teacher_name" required class="form-input">
+    </div>
+
+    <div class="form-group">
+        <label for="username" class="form-label">Username:</label>
+        <input type="text" id="username" name="username" required class="form-input">
+    </div>
+
+    <div class="form-group">
+        <label for="password" class="form-label">Password:</label>
+        <input type="password" id="password" name="password" required class="form-input">
+    </div>
+
+    <div class="form-group">
+        <label for="email" class="form-label">Email:</label>
+        <input type="email" id="email" name="email" required class="form-input">
+    </div>
+
+    <input type="submit" value="Add Teacher" class="submit-btn">
+</form>
+
+<ul class="teacher-list">
+    <h1>List of existing Teacher's</h1>
+    {% for teacher in teachers %}
+        <li class="teacher-item">{{ teacher.teacher_name }} - {{ teacher.email }}
+            <a href="/delete/{{ teacher.teacher_id }}" class="delete-link">Delete</a>
+        </li>
+    {% endfor %}
+</ul>
+
+
+{% endblock %}
