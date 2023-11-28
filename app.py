@@ -210,7 +210,7 @@ def tasks():
                    (student_details['student_id'],))
     tasks_list = [[tasks['task_description'],tasks['subject'], tasks['teacher_id'], tasks['counsellor_id'], tasks['date_created'],
                    tasks['deadline'], tasks['status'], tasks['file_path_counsellor_teacher'], tasks['file_path_parent'],
-                   tasks['task_id']] for tasks in cursor.fetchall()]
+                   tasks['task_id'], tasks['marks'], tasks['feedback']] for tasks in cursor.fetchall()]
 
     for task in tasks_list:
         if int(task[2]) > 0:
@@ -229,8 +229,20 @@ def tasks():
             task.pop(2)
             continue
 
+    if role_id == 1:
+        cursor.execute(
+            "SELECT teacher_name FROM teachers WHERE user_id = %s", (user_id,)
+        )
 
-    return render_template('tasks.html', tasks_list=tasks_list, role_id=role_id)
+        current_user = cursor.fetchone()['teacher_name']
+
+    elif role_id == 2:
+        cursor.execute(
+            "SELECT counsellor_name FROM counsellors WHERE user_id = %s", (user_id,))
+
+        current_user = cursor.fetchone()['counsellor_name']
+
+    return render_template('tasks.html', tasks_list=tasks_list, role_id=role_id, current_user=current_user)
 
 
 @app.route('/add_task', methods=['POST'])
@@ -317,8 +329,6 @@ def submit_task():
             file_path = os.path.join(UPLOAD_FOLDER, "parent", filename)
             file.save(file_path)
 
-    print((student_id, teacher_id, counsellor_id, data['task_desc'], data['assignedby'], role_id))
-
     cursor.execute(
         'UPDATE tasks SET status = "D" WHERE student_id = %s and teacher_id = %s and counsellor_id = %s and '
         'task_description = %s',
@@ -330,6 +340,50 @@ def submit_task():
 
     return jsonify({'status': 'success'})
 
+@app.route('/grade_task', methods=['POST'])
+def grade_task():
+    print("asdfsdafa")
+    if 'username' in session and 'role_id' in session:
+        user_id = session['user_id']
+        logged_in_user = session['username']
+        role_id = session['role_id']
+
+    data = request.form.to_dict()
+
+    cursor.execute(
+        "SELECT student_id FROM students WHERE student_name = %s", (data['student'],))
+    student_id = cursor.fetchone()['student_id']
+
+    counsellor_id = 0
+    teacher_id = 0
+
+    cursor.execute(
+        "SELECT teacher_id FROM teachers WHERE teacher_name = %s", (data['assignedby'],)
+    )
+
+    record = cursor.fetchone()
+    if record:
+        teacher_id = record['teacher_id']
+
+    cursor.execute(
+        "SELECT counsellor_id FROM counsellors WHERE counsellor_name = %s", (data['assignedby'],))
+
+    record = cursor.fetchone()
+    if record:
+        counsellor_id = record['counsellor_id']
+
+
+    cursor.execute(
+        'UPDATE tasks SET marks=%s WHERE student_id = %s and teacher_id = %s and counsellor_id = %s and '
+        'task_description = %s',
+        (data['marks'], student_id, teacher_id, counsellor_id, data['task_desc']))
+
+    cursor.execute(
+        'UPDATE tasks SET feedback=%s WHERE student_id = %s and teacher_id = %s and counsellor_id = %s and '
+        'task_description = %s',
+        (data['feedback'], student_id, teacher_id, counsellor_id, data['task_desc']))
+
+    return jsonify({'status': 'success'})
 
 @app.route('/download_file/<parent_folder>/<filename>')
 def download_file(parent_folder, filename):
