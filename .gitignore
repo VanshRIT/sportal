@@ -1,2 +1,9 @@
 
 test.py
+*.pyc
+__pycache__/app.cpython-311.pyc
+__pycache__/controller.cpython-311.pyc
+__pycache__/dbconfig.cpython-311.pyc
+__pycache__/dbconfig.cpython-311.pyc
+__pycache__/
+controller.cpython-311.pyc
