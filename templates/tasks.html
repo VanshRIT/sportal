@@ -97,12 +97,21 @@
             />{% endif %}
           </td>
           <td>
+              {% if role_id == 3 %}
             <button
               class="submitBtn"
               onclick="submitRow(this.parentNode.parentNode)"
             >
-              {% if role_id == 3 %} Submit {% else %} Grade {% endif %}
+               Submit
+
             </button>
+               {% else %} <button
+              class="submitBtn"
+              onclick="gradeSubjectMarks()"
+            >
+               Grade
+
+            </button> {% endif %}
           </td>
         </tr>
         {% endfor %}
@@ -203,6 +212,12 @@
       input.value = getCurrentDate();
     }
   }
+   function gradeSubjectMarks() {
+       var marks = prompt("Enter the marks:");
+       var feedback = prompt("Enter your Feedback:");
+
+      alert("Feedback submitted"+ marks + feedback)
+    }
     </script>
 
     <!-- Your existing Confirm All and Confirm Delete buttons here -->
