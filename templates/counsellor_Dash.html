@@ -2,4 +2,22 @@
 
 {% block content %}
     <!-- Add your dashboard-specific content here -->
+        <div class="grid-container">
+        <!-- Example for a single grid item -->
+        <!-- Repeat this block for each of the 36 grid items -->
+        <div class="grid-item">
+            <span class="value">{{ info[0] }}</span>
+            <span class="description">Total Student</span>
+        </div>
+            <div class="grid-item">
+            <span class="value">{{ info[1] }}</span>
+            <span class="description">Total Tasks</span>
+        </div>
+            <div class="grid-item">
+            <span class="value">{{ info[2] }}</span>
+            <span class="description">Total Ungraded</span>
+        </div>
+
+        <!-- ... repeat for other grid items ... -->
+    </div>
 {% endblock %}

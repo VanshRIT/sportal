@@ -234,3 +234,76 @@ def get_student_by_user_id(user_id):
     return result
 # Update and Delete operations for messages can be added similarly
 
+# ----------------------------------------- #
+def get_total_students_by_user_id(user_id):
+    query = """
+    SELECT teacher_id, COUNT(*) as total_students
+    FROM students
+    where teacher_id = %s;
+    """
+    cursor.execute(query,user_id)
+    result = cursor.fetchall()
+    return result
+
+
+
+def get_total_assigned_tasks_by_teacher_id(user_id):
+    query = """
+    SELECT teacher_id, COUNT(*) as total_tasks
+    FROM tasks
+    WHERE teacher_id IS NOT NULL
+    GROUP BY teacher_id;
+    """
+    cursor.execute(query)
+    result = cursor.fetchall()
+    return result
+
+def get_total_ungraded_by_teacher_id(user_id):
+    query = """
+    SELECT t.teacher_id, COUNT(*) as total_ungraded
+    FROM tasks t
+    LEFT JOIN grades g ON t.student_id = g.student_id AND t.subject = g.subject
+    WHERE t.teacher_id IS NOT NULL AND g.score IS NULL AND t.teacher_id = %s
+    
+    """
+    cursor.execute(query,user_id)
+    result = cursor.fetchall()
+    return result
+
+
+def get_total_students():
+    query = "SELECT COUNT(*) as total_students FROM students;"
+    cursor.execute(query)
+    result = cursor.fetchall()
+    return result
+
+def get_total_tasks():
+    query = "SELECT COUNT(*) as total_tasks FROM tasks;"
+    cursor.execute(query)
+    result = cursor.fetchall()
+    return result
+
+
+def get_total_ungraded():
+    query = """
+    SELECT COUNT(*) as total_ungraded
+    FROM tasks t
+    LEFT JOIN grades g ON t.student_id = g.student_id AND t.subject = g.subject
+    WHERE g.score IS NULL;
+    """
+    cursor.execute(query)
+    result = cursor.fetchall()
+    return result
+
+def get_totals():
+    query = """
+    SELECT (SELECT COUNT(*) FROM students) as total_students,
+           (SELECT COUNT(*) FROM teachers) as total_teachers,
+           (SELECT COUNT(*) FROM counsellors) as total_counsellors,
+           (SELECT COUNT(*) FROM parents) as total_parents
+    """
+    cursor.execute(query)
+    result = cursor.fetchall()
+    return result
+
+print(get_totals())

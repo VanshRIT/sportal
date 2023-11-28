@@ -32,12 +32,14 @@ def authenticate():
         cursor.execute(query, (username, password))
         user = cursor.fetchone()
 
+
         if user and password:
             role_id = user['role_id']
             # Store user information in the session
             session['user_id'] = user['user_id']
             session['username'] = username
             session['role_id'] = role_id
+
 
             if role_id == 1:
                 return redirect(url_for('teacher'))
@@ -59,8 +61,10 @@ def it_admin():
     if 'username' in session and 'role_id' in session:
         logged_in_user = session['username']
         role_id = session['role_id']
+        info = [get_totals()[0]['total_students'], get_totals()[0]['total_teachers'], get_totals()[0]['total_counsellors'], get_totals()[0]['total_parents']]
+
         # You cana also access the role_id if needed: session['role_id']
-        return render_template('it-manager-Dash.html', username=logged_in_user)
+        return render_template('it-manager-Dash.html', username=logged_in_user,info=info)
     else:
         # Redirect to the login page if the user is not logged in
         return redirect(url_for('login'))
@@ -72,8 +76,11 @@ def teacher():
     if 'username' in session and 'role_id' in session:
         logged_in_user = session['username']
         role_id = session['role_id']
+        user_id = session['user_id']
+        info = [get_student_by_user_id(user_id)]
+        print(info)
         # You cana also access the role_id if needed: session['role_id']
-        return render_template('teacher_Dash.html', username=logged_in_user)
+        return render_template('teacher_Dash.html', username=logged_in_user,info=info)
     else:
         # Redirect to the login page if the user is not logged in
         return redirect(url_for('login'))
@@ -98,8 +105,15 @@ def counsellor():
     if 'username' in session and 'role_id' in session:
         logged_in_user = session['username']
         role_id = session['role_id']
+
+        Total_Students = get_total_students()
+        Total_Tasks = get_total_tasks()
+        Total_ungraded = get_total_ungraded()
+
+        info = [Total_Students[0]["total_students"], Total_Tasks[0]["total_tasks"] , Total_ungraded[0]["total_ungraded"]]
+
         # You can also access the role_id if needed: session['role_id']
-        return render_template('counsellor_Dash.html', username=logged_in_user)
+        return render_template('counsellor_Dash.html', username=logged_in_user,info=info)
     else:
         # Redirect to the login page if the user is not logged in
         return redirect(url_for('login'))
