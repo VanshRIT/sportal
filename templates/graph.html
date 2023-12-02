@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        label {
+            margin-right: 10px;
+        }
+
+        input, button {
+            margin-bottom: 10px;
+        }
+
+        .graph-image {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <form id="dataForm" action="/make_graph" method="post">
+        <input type="hidden" id="student" name="student" value="{{ student }}">
+
+        <label for="subject">Subject:</label>
+        <input type="text" id="subject" name="subject"><br>
+
+        <label for="startDate">Start Date:</label>
+        <input type="date" id="startDate" name="startDate" max=""><br>
+
+        <label for="endDate">End Date:</label>
+        <input type="date" id="endDate" name="endDate" max=""><br>
+
+        <label for="grades">Grades:</label>
+        <input type="checkbox" id="grades" name="grades"><br>
+
+        <label for="tasks">Tasks:</label>
+        <input type="checkbox" id="tasks" name="tasks"><br>
+
+        <button type="submit">Create Graph</button>
+    </form>
+
+    {% if graph_path %}
+        <img src="{{url_for('static', filename="graphs/"+graph_path)}}" alt="{{graph_path}}" class="graph-image">
+    {% else %}
+        <p>Please choose graph details.</p>
+    {% endif %}
+
+    <script>
+        function setMaxDate() {
+            const today = new Date().toISOString().split("T")[0];
+            document.getElementById("startDate").setAttribute("max", today);
+            document.getElementById("endDate").setAttribute("max", today);
+        }
+
+        // Set the max date on page load
+        setMaxDate();
+    </script>
+</body>
+</html>

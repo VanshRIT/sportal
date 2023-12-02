@@ -2,6 +2,11 @@ from flask import Flask, render_template, session, request, redirect, url_for, f
 from controller import *
 import os
 from werkzeug.utils import secure_filename
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import datetime
+from urllib import parse
 
 app = Flask(__name__)
 
@@ -342,7 +347,6 @@ def submit_task():
 
 @app.route('/grade_task', methods=['POST'])
 def grade_task():
-    print("asdfsdafa")
     if 'username' in session and 'role_id' in session:
         user_id = session['user_id']
         logged_in_user = session['username']
@@ -478,6 +482,94 @@ def delete_counsellor(counsellor_id):
     delete_counsellor(counsellor_id)
     return redirect('/')
 
+
+@app.route('/view_graph', methods=['GET'])
+def view_graph():
+    if 'username' in session and 'role_id' in session:
+        user_id = session['user_id']
+        logged_in_user = session['username']
+        role_id = session['role_id']
+
+    student = request.args.get('student','')
+    graph_path = request.args.get('graph_path', '')
+
+    return render_template('graph.html', student=student, graph_path=graph_path)
+
+@app.route('/make_graph', methods=['POST'])
+def make_graph():
+    if 'username' in session and 'role_id' in session:
+        user_id = session['user_id']
+        logged_in_user = session['username']
+        role_id = session['role_id']
+
+    student_name = request.form['student']
+    subject = request.form['subject']
+    start_date = request.form['startDate']
+    end_date = request.form['endDate']
+    graph_grades = 'grades' in request.form
+    graph_tasks = 'tasks' in request.form
+
+    cursor.execute(
+        "SELECT student_id FROM students WHERE student_name = %s", (student_name,))
+    student_id = cursor.fetchone()['student_id']
+
+    if graph_grades:
+        cursor.execute("SELECT score, date FROM grades WHERE student_id = %s and subject = %s and date >= %s and date <= %s", (student_id, subject, start_date, end_date))
+        grades = cursor.fetchall()
+
+    if graph_tasks:
+        cursor.execute("SELECT marks, deadline FROM tasks WHERE student_id = %s and subject = %s and deadline >= %s and deadline <= %s and status='D'", (student_id, subject, start_date, end_date))
+        marks = cursor.fetchall()
+
+    letter_to_number = {
+    "A"	: 4.0 * 10/4.0,
+    "B"	: 3.3 * 10 / 4.0,
+    "C"	: 2.3 * 10 / 4.0,
+    "D"	: 1.3 * 10/ 4.0,
+    "F" : 0 * 10 / 4.0}
+
+    x_axis = []
+    y_axis = []
+    legend = []
+
+    if graph_grades and grades:
+        for grade in grades:
+            y_axis.append(letter_to_number[grade['score']])
+            x_axis.append(grade['date'])
+
+        plt.plot(x_axis, y_axis, "r")
+        legend.append("Grades")
+    
+    y_axis.clear()
+    x_axis.clear()
+    
+    if graph_tasks and marks:
+        for mark in marks:
+            y_axis.append(mark['marks'])
+            x_axis.append(mark['deadline'])
+
+        plt.plot(x_axis, y_axis, "g")
+        legend.append("Tasks")
+
+    plt.ylim(0, 10.5)
+    plt.xticks(rotation=30)
+    plt.xlabel("Date")
+    plt.ylabel("Scores")
+    plt.legend(legend)
+    plt.tight_layout()
+
+    i = 0
+    while(True):
+        if os.path.exists(f'./static/graphs/temp_{student_name}_{subject}_{i}.png'):
+            i += 1
+            continue;
+        
+        plt.savefig(f'./static/graphs/temp_{student_name}_{subject}_{i}.png')
+        break
+
+    query = {"student": student_name, "graph_path" : f'temp_{student_name}_{subject}_{i}.png'}
+    query = parse.urlencode(query)
+    return redirect('/view_graph' + '?' + query)
 
 if __name__ == '__main__':
     app.run(debug=True)

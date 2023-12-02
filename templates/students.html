@@ -35,6 +35,7 @@
           <th>Student Name</th>
           <th>View Grades</th>
           <th>View Tasks</th>
+          <th>View Graphs</th>
         </tr>
       </thead>
       <tbody>
@@ -43,6 +44,7 @@
           <td>{{ student }}</td>
           <td><button onclick="viewGrades('{{ student }}')">Grades</button></td>
           <td><button onclick="viewTasks('{{ student }}')">Tasks</button></td>
+          <td><button onclick="graphData('{{ student }}')">Graph Data</button></td>
         </tr>
         {% endfor %}
       </tbody>
@@ -99,6 +101,11 @@
       function viewTasks(studentName) {
         window.location.href =
           "/tasks?student=" + encodeURIComponent(studentName);
+      }
+
+      function graphData() {
+        window.location.href =
+          "/view_graph?student=" + encodeURIComponent(studentName);
       }
     </script>
   </body>
