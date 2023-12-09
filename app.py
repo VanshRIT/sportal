@@ -192,14 +192,11 @@ def grades():
         logged_in_user = session['username']
         role_id = session['role_id']
 
-    student_name = request.args.get('student', '')
-
-    cursor.execute(
-        "SELECT * FROM students WHERE student_name = %s", (student_name,))
-    student_details = cursor.fetchone()
+    student_id = request.args.get('studentid', '')
 
     cursor.execute("SELECT * FROM grades WHERE student_id = %s",
-                   (student_details['student_id'],))
+                   (student_id,))
+    
     grades_list = [(grades['subject'], grades['score'], grades['date'])
                    for grades in cursor.fetchall()]
 
@@ -209,14 +206,10 @@ def grades():
 @app.route('/add_grade', methods=['POST'])
 def add_grade():
     data = request.json
-    student_name = data['name']
+    student_id = data['studentid']
     subject = data['subject']
     grade = data['grade']
     date = data['date']
-
-    cursor.execute(
-        "SELECT student_id FROM students WHERE student_name = %s", (student_name,))
-    student_id = cursor.fetchone()['student_id']
 
     create_grade(student_id, 1, subject, grade, date)
 
@@ -230,19 +223,19 @@ def tasks():
         logged_in_user = session['username']
         role_id = session['role_id']
 
-    student_name = request.args.get('student', '')
-
-    cursor.execute(
-        "SELECT * FROM students WHERE student_name = %s", (student_name,))
-    student_details = cursor.fetchone()
+    student_id = request.args.get('studentid', '')
 
     cursor.execute("SELECT * FROM tasks WHERE student_id = %s",
-                   (student_details['student_id'],))
-    tasks_list = [[tasks['task_description'],tasks['subject'], tasks['teacher_id'], tasks['counsellor_id'], tasks['date_created'],
-                   tasks['deadline'], tasks['status'], tasks['file_path_counsellor_teacher'], tasks['file_path_parent'],
-                   tasks['task_id'], tasks['marks'], tasks['feedback']] for tasks in cursor.fetchall()]
+                   (student_id,))
+
+    tasks_list = [[task['task_description'], task['subject_id'], task['teacher_id'], task['counsellor_id'], task['date_created'],
+                   task['deadline'], task['status'], task['file_path_counsellor_teacher'], task['file_path_parent'],
+                   task['task_id'], task['marks'], task['feedback']] for task in cursor.fetchall()]
 
     for task in tasks_list:
+        cursor.execute("SELECT subject_name FROM subjects WHERE subject_id=%s", (task[1],))
+        task[1] = cursor.fetchone()["subject_name"]
+
         if task[2]:
             cursor.execute(
                 "SELECT teacher_name from teachers where teacher_id = %s", (task[2],))
@@ -259,21 +252,42 @@ def tasks():
             task.pop(2)
             continue
     
+    cursor.execute("SELECT weak_subjects FROM students where student_id=%s", (student_id,))
+    weak_subjects = [int(i) for i in cursor.fetchone()["weak_subjects"].split(",")]
+
+    
+    for i, sub_id in enumerate(weak_subjects):
+        cursor.execute("SELECT * FROM subjects where subject_id=%s", (sub_id,))
+        weak_subjects[i] = cursor.fetchone()
+
     current_user = ""
+
     if role_id == 1:
         cursor.execute(
-            "SELECT teacher_name FROM teachers WHERE user_id = %s", (user_id,)
+            "SELECT teacher_id, teacher_name FROM teachers WHERE user_id = %s", (user_id,)
         )
 
-        current_user = cursor.fetchone()['teacher_name']
+        teacher_details = cursor.fetchone()
+        current_user = teacher_details["teacher_name"]
 
+        temp_weak_subjects = {}
+
+        for sub in weak_subjects:
+            if sub["teacher_id"] == teacher_details["teacher_id"]:
+                temp_weak_subjects[sub["subject_name"]] = sub["subject_id"]
+                
+        weak_subjects = temp_weak_subjects
+    
     elif role_id == 2:
         cursor.execute(
             "SELECT counsellor_name FROM counsellors WHERE user_id = %s", (user_id,))
 
         current_user = cursor.fetchone()['counsellor_name']
 
-    return render_template('tasks.html', tasks_list=tasks_list, role_id=role_id, current_user=current_user)
+    if role_id == 2 or role_id == 3:
+        weak_subjects = {sub["subject_name"]:sub["subject_id"] for sub in weak_subjects}
+
+    return render_template('tasks.html', tasks_list=tasks_list, role_id=role_id, current_user=current_user, weak_subjects=weak_subjects)
 
 
 @app.route('/add_task', methods=['POST'])
@@ -284,11 +298,8 @@ def add_task():
         role_id = session['role_id']
 
     data = request.form.to_dict()
-    print(data)
 
-    cursor.execute(
-        "SELECT student_id FROM students WHERE student_name = %s", (data['student'],))
-    student_id = cursor.fetchone()['student_id']
+    student_id = data['studentid']
 
     counsellor_id = None
     teacher_id = None
@@ -315,7 +326,7 @@ def add_task():
             file.save(file_path)
 
     create_task(student_id, teacher_id, counsellor_id,
-                data['task_desc'],data['subject'], data['status'], data['due_date'], data['assigned_date'], None, file_path)
+                data['task_desc'],data['subjectid'], data['status'], data['due_date'], data['assigned_date'], None, file_path)
 
     return jsonify({'status': 'success'})
 
@@ -329,28 +340,6 @@ def submit_task():
 
     data = request.form.to_dict()
 
-    cursor.execute(
-        "SELECT student_id FROM students WHERE student_name = %s", (data['student'],))
-    student_id = cursor.fetchone()['student_id']
-
-    counsellor_id = None
-    teacher_id = None
-
-    cursor.execute(
-        "SELECT teacher_id FROM teachers WHERE teacher_name = %s", (data['assignedby'],)
-    )
-
-    record = cursor.fetchone()
-    if record:
-        teacher_id = record['teacher_id']
-
-    cursor.execute(
-        "SELECT counsellor_id FROM counsellors WHERE counsellor_name = %s", (data['assignedby'],))
-
-    record = cursor.fetchone()
-    if record:
-        counsellor_id = record['counsellor_id']
-
     file_path = None
     # File upload handling
     if 'file' in request.files:
@@ -363,14 +352,8 @@ def submit_task():
         return 
 
     cursor.execute(
-        'UPDATE tasks SET status = "D" WHERE student_id = %s and '
-        'task_description = %s',
-        (student_id, data['task_desc']))
-    
-    cursor.execute(
-        'UPDATE tasks SET file_path_parent = %s WHERE student_id = %s and '
-        'task_description = %s',
-        (file_path, student_id, data['task_desc']))
+        'UPDATE tasks SET status = "D", file_path_parent = %s WHERE task_id=%s',
+        (file_path, data['task_id']))
 
     return jsonify({'status': 'success'})
 
@@ -382,39 +365,11 @@ def grade_task():
         role_id = session['role_id']
 
     data = request.form.to_dict()
+    print(data)
 
     cursor.execute(
-        "SELECT student_id FROM students WHERE student_name = %s", (data['student'],))
-    student_id = cursor.fetchone()['student_id']
-
-    counsellor_id = None
-    teacher_id = None
-
-    cursor.execute(
-        "SELECT teacher_id FROM teachers WHERE teacher_name = %s", (data['assignedby'],)
-    )
-
-    record = cursor.fetchone()
-    if record:
-        teacher_id = record['teacher_id']
-
-    cursor.execute(
-        "SELECT counsellor_id FROM counsellors WHERE counsellor_name = %s", (data['assignedby'],))
-
-    record = cursor.fetchone()
-    if record:
-        counsellor_id = record['counsellor_id']
-
-
-    cursor.execute(
-        'UPDATE tasks SET marks=%s WHERE student_id = %s and teacher_id = %s and counsellor_id = %s and '
-        'task_description = %s',
-        (data['marks'], student_id, teacher_id, counsellor_id, data['task_desc']))
-
-    cursor.execute(
-        'UPDATE tasks SET feedback=%s WHERE student_id = %s and teacher_id = %s and counsellor_id = %s and '
-        'task_description = %s',
-        (data['feedback'], student_id, teacher_id, counsellor_id, data['task_desc']))
+        'UPDATE tasks SET marks=%s, feedback=%s WHERE task_id=%s',
+        (data['marks'], data['feedback'], data['task_id']))
 
     return jsonify({'status': 'success'})
 

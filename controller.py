@@ -200,10 +200,10 @@ def delete_grade(grade_id):
     db_connection.commit()
 
 # Create operation for tasks
-def create_task(student_id, teacher_id, counsellor_id, task_description,subject, status, deadline, date_created, file_path_parent, file_path_counsellor_teacher):
-    insert_task_query = "insert into tasks (student_id, teacher_id, counsellor_id, task_description, subject, status, \
+def create_task(student_id, teacher_id, counsellor_id, task_description, subject_id, status, deadline, date_created, file_path_parent, file_path_counsellor_teacher):
+    insert_task_query = "insert into tasks (student_id, teacher_id, counsellor_id, task_description, subject_id, status, \
         deadline, date_created, file_path_parent, file_path_counsellor_teacher) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
-    cursor.execute(insert_task_query, (student_id, teacher_id, counsellor_id, task_description,subject, status, deadline, date_created, file_path_parent, file_path_counsellor_teacher))
+    cursor.execute(insert_task_query, (student_id, teacher_id, counsellor_id, task_description, subject_id, status, deadline, date_created, file_path_parent, file_path_counsellor_teacher))
     db_connection.commit()
 
 # Read operation for tasks

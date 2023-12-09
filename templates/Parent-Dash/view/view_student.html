@@ -101,10 +101,10 @@
         <tr>
           <td>{{ student[0] }}</td>
           <td>{{ ", ".join(student[2]) }}</td>
-          <td><button onclick="viewGrades('{{ student[0] }}')">Grades</button></td>
-          <td><button onclick="viewTasks('{{ student[0] }}')">Tasks</button></td>
+          <td><button onclick="viewGrades('{{ student[1] }}')">Grades</button></td>
+          <td><button onclick="viewTasks('{{ student[1] }}')">Tasks</button></td>
           <td>
-            <button onclick="graphData('{{ student[0] }}')">Graph Data</button>
+            <button onclick="graphData('{{ student[1] }}')">Graph Data</button>
           </td>
         </tr>
         {% endfor %}
@@ -191,19 +191,19 @@
       }
       var deleteMode = false;
 
-      function viewGrades(studentName) {
+      function viewGrades(studentID) {
         window.location.href =
-          "/grades?student=" + encodeURIComponent(studentName);
+          "/grades?studentid=" + encodeURIComponent(studentID);
       }
 
-      function viewTasks(studentName) {
+      function viewTasks(studentID) {
         window.location.href =
-          "/tasks?student=" + encodeURIComponent(studentName);
+          "/tasks?studentid=" + encodeURIComponent(studentID);
       }
 
-      function graphData(studentName) {
+      function graphData(studentID) {
         window.location.href =
-          "/view_graph?student=" + encodeURIComponent(studentName);
+          "/view_graph?studentid=" + encodeURIComponent(studentID);
       }
     </script>
   </body>

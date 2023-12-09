@@ -87,7 +87,7 @@
       function confirmGrade(row) {
         var cells = row.getElementsByTagName("input");
         var gradeData = {
-          name: getQueryParam('student'),
+          studentid: getQueryParam('studentid'),
           subject: cells[0].value,
           grade: cells[1].value,
           date: cells[2].value,

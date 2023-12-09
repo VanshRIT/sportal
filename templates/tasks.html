@@ -88,25 +88,29 @@
               target="_blank"
               >View File</a
             >
-            {% else %}<input
-              type="file"
-              class="fileUpload"
-              onchange="handleFileUpload(this)"
-            />{% endif %}
+            {% else %}
+              {% if role_id == 3 %}
+              <input
+                type="file"
+                class="fileUpload"
+                onchange="handleFileUpload(this)"
+              />
+              {% else %} No File {% endif %}
+            {% endif %}
           </td>
           <td>
             {% if not record[-2] %}
               {% if role_id == 3 and record[5] == "ND" %}
               <button
                 class="submitBtn"
-                onclick="submitRow(this.parentNode.parentNode)"
+                onclick="submitRow(this.parentNode.parentNode, {{ record[-3] }})"
               >
                 Submit
               </button>
               {% else %} {% if current_user == record[2] and not record[-2] and record[5] == 'D' %}
               <button
                 class="submitBtn"
-                onclick="gradeSubjectMarks(this.parentNode.parentNode)"
+                onclick="gradeSubjectMarks(this.parentNode.parentNode, {{ record[-3] }})"
               >
                 Grade
               </button>
@@ -153,8 +157,7 @@
 
         // Populate cells with inputs, selects, and buttons
         nameCell.innerHTML = "<input type='text' placeholder='Enter task'>";
-        subjectCell.innerHTML =
-          "<select><option value=''>Select Subject</option><option value='Math'>Math</option><option value='Science'>Science</option><option value='History'>History</option></select>";
+        subjectCell.innerHTML = "<select>{% for subject in weak_subjects.keys() %}<option value={{ weak_subjects[subject] }}> {{ subject }} </option>{% endfor %}</select>";
         assignedDateCell.innerHTML = getCurrentDate();
         dueDateCell.innerHTML =
           "<input type='date' value='" +
@@ -174,12 +177,12 @@
         var cells = row.cells;
 
         // Append text data to formData
-        formData.append("subject", cells[1].querySelector("select").value);
+        formData.append("subjectid", cells[1].querySelector("select").value);
         formData.append("task_desc", cells[0].querySelector("input").value);
         formData.append("assigned_date", cells[3].innerText);
         formData.append("due_date", cells[4].querySelector("input").value);
         formData.append("status", cells[5].innerText);
-        formData.append("student", getQueryParam("student"));
+        formData.append("studentid", getQueryParam("studentid"));
         console.log(formData);
 
         // Append file data to formData
@@ -194,7 +197,7 @@
         xhr.onreadystatechange = function () {
           if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
             console.log("Task added");
-            window.location.reload(); // Reload page on success
+            window.location.reload(); // Reload pag e on success
           }
         };
         xhr.send(formData);
@@ -230,18 +233,14 @@
         }
       }
 
-      function gradeSubjectMarks(row) {
+      function gradeSubjectMarks(row, task_id) {
         var marks = prompt("Enter the marks:");
         var feedback = prompt("Enter your Feedback:");
         var formData = new FormData();
         var cells = row.cells;
-        console.log("hello");
 
         // Append text data to formData
-        formData.append("task_desc", cells[0].innerText);
-        formData.append("assignedby", cells[2].innerText)
-        formData.append("status", cells[5].innerText);
-        formData.append("student", getQueryParam("student"));
+        formData.append("task_id", task_id);
         formData.append("marks", marks);
         formData.append("feedback", feedback);
 
@@ -255,18 +254,15 @@
           }
         };
         xhr.send(formData);
-        alert("Feedback submitted" + marks + feedback);
+        alert("Feedback submitted");
       }
 
-      function submitRow(row){
+      function submitRow(row, task_id){
         var formData = new FormData();
         var cells = row.cells;
 
         // Append text data to formData
-        formData.append("task_desc", cells[0].innerText);
-        formData.append("assignedby", cells[2].innerText)
-        formData.append("status", cells[5].innerText);
-        formData.append("student", getQueryParam("student"));
+        formData.append("task_id", task_id);
 
         // Append file data to formData
         var fileInput = cells[7].querySelector(".fileUpload");
