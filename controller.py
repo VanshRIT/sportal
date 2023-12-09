@@ -1,5 +1,14 @@
 from dbconfig import *
 
+def get_subjects_from_student(student_id: int):
+    cursor.execute("SELECT weak_subjects FROM students WHERE student_id=%s", (student_id,))
+    lst = cursor.fetchone()
+
+    if lst:
+        lst = [int(sub_id) for sub_id in lst.split(",")]
+
+    return lst
+
 # Create operation for roles
 def create_role(role_name):
     insert_role_query = "INSERT INTO roles (role_name) VALUES (%s)"
@@ -49,9 +58,9 @@ def delete_user(user_id):
     db_connection.commit()
 
 # Create operation for students
-def create_student(student_name, counsellor_id, teacher_id, parent_id):
-    insert_student_query = "INSERT INTO students (student_name, counsellor_id, teacher_id, parent_id) VALUES (%s, %s, %s, %s)"
-    cursor.execute(insert_student_query, (student_name, counsellor_id, teacher_id, parent_id))
+def create_student(student_name, counsellor_id, parent_id, weak_subjects):
+    insert_student_query = "INSERT INTO students (student_name, counsellor_id, parent_id, weak_subjects) VALUES (%s, %s, %s, %s)"
+    cursor.execute(insert_student_query, (student_name, counsellor_id, parent_id, weak_subjects))
     db_connection.commit()
 
 # Read operation for students

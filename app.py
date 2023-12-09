@@ -5,15 +5,14 @@ from werkzeug.utils import secure_filename
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import datetime
 from urllib import parse
 
 app = Flask(__name__)
 
 app.secret_key = 'your_secret_key'
 
-UPLOAD_FOLDER = r'files_uploaded'
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+UPLOAD_FOLDER = r'C:\Users\prana\Documents\GitHub\sportal\static\files_uploaded'
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'zip', 'py'}
 
 
 def allowed_file(filename):
@@ -132,6 +131,9 @@ def students():
         role_id = session['role_id']
 
     students_list = []
+    cursor.execute("SELECT * FROM subjects")
+    all_subjects = {subject["subject_name"] : subject["subject_id"] for subject in cursor.fetchall()}
+    id_subject_map = {v:k for k, v in all_subjects.items()}
 
     if role_id == 2:
         cursor.execute(
@@ -140,18 +142,26 @@ def students():
 
         cursor.execute("SELECT * FROM students WHERE counsellor_id = %s",
                        (counsellor_details['counsellor_id'],))
-        students_list = [student['student_name']
+        
+        students_list = [(student['student_name'], student["student_id"], [id_subject_map[int(i)] for i in student["weak_subjects"].split(",")])
                          for student in cursor.fetchall()]
 
     if role_id == 1:
         cursor.execute("SELECT * FROM teachers WHERE user_id = %s", (user_id,))
         teacher_details = cursor.fetchone()
 
-        cursor.execute("SELECT * FROM students WHERE teacher_id = %s",
-                       (teacher_details['teacher_id'],))
-        students_list = [student['student_name']
-                         for student in cursor.fetchall()]
-        return render_template('Teacher-Dash/view/view_student.html', students_list=students_list, role_id=role_id)
+        cursor.execute("SELECT * FROM subjects WHERE teacher_id=%s", (teacher_details['teacher_id'],))
+        subjects = cursor.fetchall()
+
+        subject_ids = [int(subject["subject_id"]) for subject in subjects]
+
+        cursor.execute("SELECT * FROM students")
+
+        for student in cursor.fetchall():
+            weak_subjects = [int(i) for i in student["weak_subjects"].split(",")]
+            
+            if len(set(subject_ids).intersection(set(weak_subjects))) > 0:
+                students_list.append((student["student_name"], student["student_id"], [id_subject_map[i] for i in weak_subjects]))
 
     if role_id == 3:
         cursor.execute("SELECT * FROM parents WHERE user_id = %s", (user_id,))
@@ -159,17 +169,18 @@ def students():
 
         cursor.execute("SELECT * FROM students WHERE parent_id = %s",
                        (parent_details['parent_id'],))
-        students_list = [student['student_name']
+        
+        students_list = [(student['student_name'], student["student_id"], [id_subject_map[int(i)] for i in student["weak_subjects"].split(",")])
                          for student in cursor.fetchall()]
 
-    return render_template('Parent-Dash/view/view_student.html', students_list=students_list, role_id=role_id)
+    return render_template('Parent-Dash/view/view_student.html', students_list=students_list, role_id=role_id, all_subjects=all_subjects)
 
 @app.route('/add_student', methods=['POST'])
 def add_student():
     data = request.json
     student_name = data['name']
 
-    create_student(student_name, 1, 1, 1)
+    create_student(student_name, 1, 1, ",".join(map(str, data['weak_subjects'])))
 
     return jsonify({'status': 'success'})
 
@@ -232,7 +243,7 @@ def tasks():
                    tasks['task_id'], tasks['marks'], tasks['feedback']] for tasks in cursor.fetchall()]
 
     for task in tasks_list:
-        if int(task[2]) > 0:
+        if task[2]:
             cursor.execute(
                 "SELECT teacher_name from teachers where teacher_id = %s", (task[2],))
             task[2] = cursor.fetchone()['teacher_name']
@@ -240,14 +251,15 @@ def tasks():
             task.pop(3)
             continue
 
-        if int(task[3]) > 0:
+        if task[3]:
             cursor.execute(
                 "SELECT counsellor_name from counsellors where counsellor_id = %s", (task[3],))
             task[3] = cursor.fetchone()['counsellor_name']
 
             task.pop(2)
             continue
-
+    
+    current_user = ""
     if role_id == 1:
         cursor.execute(
             "SELECT teacher_name FROM teachers WHERE user_id = %s", (user_id,)
@@ -278,8 +290,8 @@ def add_task():
         "SELECT student_id FROM students WHERE student_name = %s", (data['student'],))
     student_id = cursor.fetchone()['student_id']
 
-    counsellor_id = 0
-    teacher_id = 0
+    counsellor_id = None
+    teacher_id = None
 
     if role_id == 1:
         cursor.execute(
@@ -321,8 +333,8 @@ def submit_task():
         "SELECT student_id FROM students WHERE student_name = %s", (data['student'],))
     student_id = cursor.fetchone()['student_id']
 
-    counsellor_id = 0
-    teacher_id = 0
+    counsellor_id = None
+    teacher_id = None
 
     cursor.execute(
         "SELECT teacher_id FROM teachers WHERE teacher_name = %s", (data['assignedby'],)
@@ -347,15 +359,18 @@ def submit_task():
             filename = secure_filename(file.filename)
             file_path = os.path.join(UPLOAD_FOLDER, "parent", filename)
             file.save(file_path)
+    else:
+        return 
 
     cursor.execute(
-        'UPDATE tasks SET status = "D" WHERE student_id = %s and teacher_id = %s and counsellor_id = %s and '
+        'UPDATE tasks SET status = "D" WHERE student_id = %s and '
         'task_description = %s',
-        (student_id, teacher_id, counsellor_id, data['task_desc']))
+        (student_id, data['task_desc']))
+    
     cursor.execute(
-        'UPDATE tasks SET file_path_parent = %s WHERE student_id = %s and teacher_id = %s and counsellor_id = %s and '
+        'UPDATE tasks SET file_path_parent = %s WHERE student_id = %s and '
         'task_description = %s',
-        (file_path, student_id, teacher_id, counsellor_id, data['task_desc']))
+        (file_path, student_id, data['task_desc']))
 
     return jsonify({'status': 'success'})
 
@@ -372,8 +387,8 @@ def grade_task():
         "SELECT student_id FROM students WHERE student_name = %s", (data['student'],))
     student_id = cursor.fetchone()['student_id']
 
-    counsellor_id = 0
-    teacher_id = 0
+    counsellor_id = None
+    teacher_id = None
 
     cursor.execute(
         "SELECT teacher_id FROM teachers WHERE teacher_name = %s", (data['assignedby'],)

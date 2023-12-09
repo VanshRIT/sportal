@@ -1,80 +1,87 @@
-{% extends 'Teacher-Dash/base.html' %}
-
-{% block content %}
-    <!-- Add your dashboard-specific content here -->
-    <html lang="en">
+{% extends 'Teacher-Dash/base.html' %} {% block content %}
+<!-- Add your dashboard-specific content here -->
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Student Grades</title>
-      <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      padding: 20px;
-      line-height: 1.6;
-    }
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        padding: 20px;
+        line-height: 1.6;
+      }
 
-    h1 {
-      color: #333;
-      text-align: center;
-    }
+      h1 {
+        color: #333;
+        text-align: center;
+      }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px 0;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
 
-    th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: left;
-      background-color: #fff;
-    }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+        background-color: #fff;
+      }
 
-    th {
-      background-color: #e9e9e9;
-    }
+      th {
+        background-color: #e9e9e9;
+      }
 
-    button {
-      background-color: #5cb85c;
-      color: white;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
+      button {
+        background-color: #5cb85c;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
 
-    button:hover {
-      background-color: #4cae4c;
-    }
+      button:hover {
+        background-color: #4cae4c;
+      }
 
-    .checkbox-container {
-      display: inline-block;
-      vertical-align: top;
-    }
+      .checkbox-container {
+        display: inline-block;
+        vertical-align: top;
+      }
 
-    input[type="text"] {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    }
+      input[type="text"] {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
 
-    input[readonly] {
-      border: none;
-      background-color: transparent;
-    }
-    #gradesTable{
+      input[readonly] {
+        border: none;
+        background-color: transparent;
+      }
+      #gradesTable {
         margin-top: 80px;
-    }
-    .button-container{
+      }
+      .button-container {
         max-height: 45px;
         margin-top: 22em;
-    }
-  </style>
+      }
+
+      select {
+        width: 150px;
+      }
+
+      option {
+        width: 150px;
+      }
+    </style>
   </head>
   <body>
     <h1>Students</h1>
@@ -83,6 +90,7 @@
       <thead>
         <tr>
           <th>Student Name</th>
+          <th>Weak Subjects</th>
           <th>View Grades</th>
           <th>View Tasks</th>
           <th>View Graphs</th>
@@ -91,45 +99,83 @@
       <tbody>
         {% for student in students_list %}
         <tr>
-          <td>{{ student }}</td>
-          <td><button onclick="viewGrades('{{ student }}')">Grades</button></td>
-          <td><button onclick="viewTasks('{{ student }}')">Tasks</button></td>
-          <td><button onclick="graphData('{{ student }}')">Graph Data</button></td>
+          <td>{{ student[0] }}</td>
+          <td>{{ ", ".join(student[2]) }}</td>
+          <td><button onclick="viewGrades('{{ student[0] }}')">Grades</button></td>
+          <td><button onclick="viewTasks('{{ student[0] }}')">Tasks</button></td>
+          <td>
+            <button onclick="graphData('{{ student[0] }}')">Graph Data</button>
+          </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
 
-    {% if role_id == 2 %}
-    <button class="button-container" onclick="addRow()">Create</button>
-    <button class="button-container" onclick="toggleDeleteMode()">Delete</button>
+    {% if role_id == 2 %}"
+    <button class="button-container" onclick="addRow({{ all_subjects }})">
+      Create
+    </button>
+    <button class="button-container" onclick="toggleDeleteMode()">
+      Delete
+    </button>
     <div class="checkbox-container"></div>
     {% endif %}
-
+    <script
+      type="text/javascript"
+      src="{{ url_for('static', filename='js/multiselect-dropdown.js') }}"
+    ></script>
     <script>
-      function addRow() {
+      function addRow(subjects) {
         var table = document.getElementById("gradesTable");
         var newRow = table.insertRow(-1);
 
         var cell1 = newRow.insertCell(0);
         var cell2 = newRow.insertCell(1);
+        var cell3 = newRow.insertCell(2);
 
         var input = document.createElement("input");
         input.type = "text";
         cell1.appendChild(input);
 
+        var subjectsInput = document.createElement("select");
+        subjectsInput.setAttribute("multiple", "");
+        subjectsInput.setAttribute("id", "subjects");
+        subjectsInput.setAttribute("name", "subjects");
+        subjectsInput.setAttribute("class", "subjects");
+        subjectsInput.setAttribute("multiselect-search", "true");
+
+        for (let name in subjects) {
+          var opt = document.createElement("option");
+          opt.text = name;
+          opt.value = subjects[name];
+          opt.className = name;
+          subjectsInput.appendChild(opt);
+        }
+        cell2.appendChild(subjectsInput);
+
         var confirmButton = document.createElement("button");
         confirmButton.textContent = "Confirm";
-        cell2.appendChild(confirmButton);
+        cell3.appendChild(confirmButton);
+
+        MultiselectDropdown(window.MultiselectDropdownOptions);
 
         confirmButton.onclick = function () {
           input.readOnly = true;
-          sendStudentName(input.value);
-          confirmButton.style.display = "none";
+          setTimeout(() => {
+            var selected_spans = document.getElementsByClassName("optext");
+            var sel_subjects = [];
+
+            for (var i = 0; i < selected_spans.length; i++) {
+              sel_subjects.push(subjects[selected_spans[i].innerText.slice(0, -3)]);
+            }
+            
+            sendStudentName(input.value, sel_subjects);
+            confirmButton.style.display = "none";
+          }, 0);
         };
       }
 
-      function sendStudentName(studentName) {
+      function sendStudentName(studentName, subjects_) {
         var xhr = new XMLHttpRequest();
         xhr.open("POST", "/add_student", true);
         xhr.setRequestHeader("Content-Type", "application/json");
@@ -139,7 +185,9 @@
             window.location.reload();
           }
         };
-        xhr.send(JSON.stringify({ name: studentName }));
+        xhr.send(
+          JSON.stringify({ name: studentName, weak_subjects: subjects_ })
+        );
       }
       var deleteMode = false;
 
@@ -159,4 +207,5 @@
       }
     </script>
   </body>
-{% endblock %}
+  {% endblock %}
+</html>

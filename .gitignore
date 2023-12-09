@@ -1,15 +1,4 @@
 
 test.py
 *.pyc
-__pycache__/app.cpython-311.pyc
-__pycache__/controller.cpython-311.pyc
-__pycache__/dbconfig.cpython-311.pyc
-__pycache__/dbconfig.cpython-311.pyc
-__pycache__/
-controller.cpython-311.pyc
-static/graphs/temp_test_student_1_Maths_0.png
-static/graphs/temp_test_student_1_Maths_1.png
-static/graphs/temp_test_student_1_Maths_2.png
-static/graphs/temp_test_student_1_Maths_4.png
-static/graphs/temp_test_student_1_Maths_3.png
 *.png

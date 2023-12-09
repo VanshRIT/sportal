@@ -96,7 +96,7 @@
           </td>
           <td>
             {% if not record[-2] %}
-              {% if role_id == 3 %}
+              {% if role_id == 3 and record[5] == "ND" %}
               <button
                 class="submitBtn"
                 onclick="submitRow(this.parentNode.parentNode)"
@@ -229,6 +229,7 @@
           input.value = getCurrentDate();
         }
       }
+
       function gradeSubjectMarks(row) {
         var marks = prompt("Enter the marks:");
         var feedback = prompt("Enter your Feedback:");
@@ -255,6 +256,40 @@
         };
         xhr.send(formData);
         alert("Feedback submitted" + marks + feedback);
+      }
+
+      function submitRow(row){
+        var formData = new FormData();
+        var cells = row.cells;
+
+        // Append text data to formData
+        formData.append("task_desc", cells[0].innerText);
+        formData.append("assignedby", cells[2].innerText)
+        formData.append("status", cells[5].innerText);
+        formData.append("student", getQueryParam("student"));
+
+        // Append file data to formData
+        var fileInput = cells[7].querySelector(".fileUpload");
+        
+        if (fileInput && fileInput.files[0]) {
+          formData.append("file", fileInput.files[0]);
+        }
+        else{
+          alert ("Please add a file to submit");
+          return;
+        }
+        // Send data to backend via AJAX
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/submit_task", true);
+        xhr.onreadystatechange = function () {
+          if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+            console.log("Task added");
+            window.location.reload(); // Reload page on success
+          }
+        };
+        xhr.send(formData);
+
+        row.querySelector(".submitBtn").style.display = "none";
       }
     </script>
 
