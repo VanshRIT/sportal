@@ -365,7 +365,6 @@ def grade_task():
         role_id = session['role_id']
 
     data = request.form.to_dict()
-    print(data)
 
     cursor.execute(
         'UPDATE tasks SET marks=%s, feedback=%s WHERE task_id=%s',
