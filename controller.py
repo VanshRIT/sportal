@@ -176,9 +176,9 @@ def delete_attendance(attendance_id):
     db_connection.commit()
 
 # Create operation for grades
-def create_grade(student_id, teacher_id, subject, score, date):
-    insert_grade_query = "INSERT INTO grades (student_id, teacher_id, subject, score, date) VALUES (%s, %s, %s, %s, %s)"
-    cursor.execute(insert_grade_query, (student_id, teacher_id, subject, score, date))
+def create_grade(student_id, teacher_id, subject_id, item, score, date):
+    insert_grade_query = "INSERT INTO grades (student_id, teacher_id, subject_id, item, score, date) VALUES (%s, %s, %s, %s, %s, %s)"
+    cursor.execute(insert_grade_query, (student_id, teacher_id, subject_id, item, score, date))
     db_connection.commit()
 
 # Read operation for grades

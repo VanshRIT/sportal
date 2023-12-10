@@ -131,7 +131,9 @@ def students():
         role_id = session['role_id']
 
     students_list = []
+    
     cursor.execute("SELECT * FROM subjects")
+    
     all_subjects = {subject["subject_name"] : subject["subject_id"] for subject in cursor.fetchall()}
     id_subject_map = {v:k for k, v in all_subjects.items()}
 
@@ -197,21 +199,49 @@ def grades():
     cursor.execute("SELECT * FROM grades WHERE student_id = %s",
                    (student_id,))
     
-    grades_list = [(grades['subject'], grades['score'], grades['date'])
-                   for grades in cursor.fetchall()]
+    grades_list = []
+    
+    for grade in cursor.fetchall():
+        cursor.execute("SELECT * FROM subjects WHERE subject_id=%s", (grade["subject_id"], ))
+        grades_list.append((grade['item'], cursor.fetchone()["subject_name"], grade['score'], grade['date']))
+        
+    
+    cursor.execute("SELECT weak_subjects FROM students where student_id=%s", (student_id,))
+    weak_subjects = [int(i) for i in cursor.fetchone()["weak_subjects"].split(",")]
 
-    return render_template('grades.html', grades_list=grades_list, role_id=role_id)
+    
+    for i, sub_id in enumerate(weak_subjects):
+        cursor.execute("SELECT * FROM subjects where subject_id=%s", (sub_id,))
+        weak_subjects[i] = cursor.fetchone()
+
+    cursor.execute(
+            "SELECT teacher_id FROM teachers WHERE user_id = %s", (user_id,)
+        )
+
+    teacher_id = cursor.fetchone()["teacher_id"]
+
+    temp_weak_subjects = {}
+
+    for sub in weak_subjects:
+        if sub["teacher_id"] == teacher_id:
+            temp_weak_subjects[sub["subject_name"]] = sub["subject_id"]
+            
+    weak_subjects = temp_weak_subjects
+
+    return render_template('grades.html', grades_list=grades_list, role_id=role_id, weak_subjects=weak_subjects, teacher_id=teacher_id)
 
 
 @app.route('/add_grade', methods=['POST'])
 def add_grade():
     data = request.json
     student_id = data['studentid']
-    subject = data['subject']
+    subject_id = data['subjectid']
+    item = data['item']
     grade = data['grade']
     date = data['date']
+    teacher_id = data['teacherid']
 
-    create_grade(student_id, 1, subject, grade, date)
+    create_grade(student_id, teacher_id, subject_id, item, grade, date)
 
     return jsonify({'status': 'success'})
 
@@ -473,10 +503,17 @@ def view_graph():
         logged_in_user = session['username']
         role_id = session['role_id']
 
-    student = request.args.get('student','')
+    student_id = request.args.get('studentid','')
     graph_path = request.args.get('graph_path', '')
 
-    return render_template('graph.html', student=student, graph_path=graph_path)
+    cursor.execute("SELECT weak_subjects FROM students where student_id=%s", (student_id,))
+    weak_subjects = {}
+
+    for sub_id in cursor.fetchone()["weak_subjects"].split(","):
+        cursor.execute("SELECT * FROM subjects where subject_id=%s", (int(sub_id),))
+        weak_subjects[cursor.fetchone()["subject_name"]] = sub_id
+
+    return render_template('graph.html', student_id=student_id, graph_path=graph_path, weak_subjects=weak_subjects)
 
 @app.route('/make_graph', methods=['POST'])
 def make_graph():
@@ -485,23 +522,20 @@ def make_graph():
         logged_in_user = session['username']
         role_id = session['role_id']
 
-    student_name = request.form['student']
-    subject = request.form['subject']
+    student_id = int(request.form['student_id'])
+    subject_id = int(request.form['subject'])
     start_date = request.form['startDate']
     end_date = request.form['endDate']
+
     graph_grades = 'grades' in request.form
     graph_tasks = 'tasks' in request.form
 
-    cursor.execute(
-        "SELECT student_id FROM students WHERE student_name = %s", (student_name,))
-    student_id = cursor.fetchone()['student_id']
-
     if graph_grades:
-        cursor.execute("SELECT score, date FROM grades WHERE student_id = %s and subject = %s and date >= %s and date <= %s", (student_id, subject, start_date, end_date))
+        cursor.execute("SELECT score, date FROM grades WHERE student_id = %s and subject_id = %s and date >= %s and date <= %s", (student_id, subject_id, start_date, end_date))
         grades = cursor.fetchall()
 
     if graph_tasks:
-        cursor.execute("SELECT marks, deadline FROM tasks WHERE student_id = %s and subject = %s and deadline >= %s and deadline <= %s and status='D'", (student_id, subject, start_date, end_date))
+        cursor.execute("SELECT marks, deadline FROM tasks WHERE student_id = %s and subject_id = %s and deadline >= %s and deadline <= %s and status='D'", (student_id, subject_id, start_date, end_date))
         marks = cursor.fetchall()
 
     letter_to_number = {
@@ -543,14 +577,14 @@ def make_graph():
 
     i = 0
     while(True):
-        if os.path.exists(f'./static/graphs/temp_{student_name}_{subject}_{i}.png'):
+        if os.path.exists(f'./static/graphs/temp_{student_id}_{subject_id}_{i}.png'):
             i += 1
             continue;
         
-        plt.savefig(f'./static/graphs/temp_{student_name}_{subject}_{i}.png')
+        plt.savefig(f'./static/graphs/temp_{student_id}_{subject_id}_{i}.png')
         break
 
-    query = {"student": student_name, "graph_path" : f'temp_{student_name}_{subject}_{i}.png'}
+    query = {"studentid": student_id, "graph_path" : f'temp_{student_id}_{subject_id}_{i}.png'}
     query = parse.urlencode(query)
     return redirect('/view_graph' + '?' + query)
 

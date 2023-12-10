@@ -23,10 +23,15 @@
 </head>
 <body>
     <form id="dataForm" action="/make_graph" method="post">
-        <input type="hidden" id="student" name="student" value="{{ student }}">
+        <input type="hidden" id="student_id" name="student_id" value={{student_id}}>
 
         <label for="subject">Subject:</label>
-        <input type="text" id="subject" name="subject"><br>
+        <select id="subject" name="subject">
+            <option value="">Select Subject</option>
+            {% for subject, id in weak_subjects.items() %}
+                <option value={{id}}>{{subject}}</option>
+            {% endfor %}
+        </select><br>
 
         <label for="startDate">Start Date:</label>
         <input type="date" id="startDate" name="startDate" max=""><br>

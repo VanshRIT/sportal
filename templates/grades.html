@@ -32,7 +32,7 @@
     <table id="gradesRecordTable">
       <thead>
         <tr>
-          <!-- <th>Select</th> -->
+          <th>Item</th>
           <th>Subject</th>
           <th>Grade</th>
           <th>Date</th>
@@ -44,6 +44,7 @@
           <td>{{record[0]}}</td>
           <td>{{record[1]}}</td>
           <td>{{record[2]}}</td>
+          <td>{{record[3]}}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -60,22 +61,32 @@
         var table = document.getElementById("gradesRecordTable");
         var newRow = table.insertRow(-1);
 
-        // Add cells for Subject, Grade, Date
-        for (var i = 0; i < 3; i++) {
-          var cell = newRow.insertCell(i);
-          var input = document.createElement("input");
-          input.type = "text";
-          cell.appendChild(input);
-        }
+        var input = newRow.insertCell(0);
+        input.innerHTML = "<input type='text' placeholder='Enter Item'>";
+
+        var subCell = newRow.insertCell(1);
+        subCell.innerHTML = "<select><option value=''>Select Subject</option>{% for subject in weak_subjects.keys() %}<option value={{ weak_subjects[subject] }}> {{ subject }} </option>{% endfor %}</select>";
+        
+        var gradeCell = newRow.insertCell(2);
+        gradeCell.innerHTML = "<select><option value=''>Select Grade</option><option value='A'>A</option><option value='B'>B</option><option value='C'>C</option><option value='D'>D</option><option value='F'>F</option></select>";
+
+        var dateCell = newRow.insertCell(3);
+        dateCell.innerHTML =
+          "<input type='date' max='" + getCurrentDate() + "'>";
 
         // Add Confirm button cell
-        var confirmCell = newRow.insertCell(3);
+        var confirmCell = newRow.insertCell(4);
         var confirmButton = document.createElement("button");
         confirmButton.textContent = "Confirm";
         confirmButton.onclick = function () {
           confirmGrade(newRow);
         };
         confirmCell.appendChild(confirmButton);
+      }
+
+      function getCurrentDate() {
+        var today = new Date();
+        return today.toISOString().split("T")[0];
       }
 
       function getQueryParam(param) {
@@ -85,12 +96,14 @@
     }
 
       function confirmGrade(row) {
-        var cells = row.getElementsByTagName("input");
+        var cells = row.cells;
         var gradeData = {
           studentid: getQueryParam('studentid'),
-          subject: cells[0].value,
-          grade: cells[1].value,
-          date: cells[2].value,
+          item: cells[0].querySelector("input").value,
+          subjectid: cells[1].querySelector("select").value,
+          grade: cells[2].querySelector("select").value,
+          date: cells[3].querySelector("input").value,
+          teacherid: {{teacher_id}}
         };
 
         // Send data to backend via AJAX

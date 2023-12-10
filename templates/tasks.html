@@ -103,14 +103,14 @@
               {% if role_id == 3 and record[5] == "ND" %}
               <button
                 class="submitBtn"
-                onclick="submitRow(this.parentNode.parentNode, {{ record[-3] }})"
+                onclick="submitRow(this.parentNode.parentNode, {{record[-3]}})"
               >
                 Submit
               </button>
               {% else %} {% if current_user == record[2] and not record[-2] and record[5] == 'D' %}
               <button
                 class="submitBtn"
-                onclick="gradeSubjectMarks(this.parentNode.parentNode, {{ record[-3] }})"
+                onclick="gradeSubjectMarks(this.parentNode.parentNode, {{record[-3]}})"
               >
                 Grade
               </button>
@@ -157,7 +157,7 @@
 
         // Populate cells with inputs, selects, and buttons
         nameCell.innerHTML = "<input type='text' placeholder='Enter task'>";
-        subjectCell.innerHTML = "<select>{% for subject in weak_subjects.keys() %}<option value={{ weak_subjects[subject] }}> {{ subject }} </option>{% endfor %}</select>";
+        subjectCell.innerHTML = "<select><option value=''>Select Subject</option>{% for subject in weak_subjects.keys() %}<option value={{ weak_subjects[subject] }}> {{ subject }} </option>{% endfor %}</select>";
         assignedDateCell.innerHTML = getCurrentDate();
         dueDateCell.innerHTML =
           "<input type='date' value='" +
