@@ -11,7 +11,7 @@ app = Flask(__name__)
 
 app.secret_key = 'your_secret_key'
 
-UPLOAD_FOLDER = r'C:\Users\prana\Documents\GitHub\sportal\static\files_uploaded'
+UPLOAD_FOLDER = r'.\static\files_uploaded'
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'zip', 'py'}
 
 
@@ -536,14 +536,14 @@ def view_graph():
     student_id = request.args.get('studentid','')
     graph_path = request.args.get('graph_path', '')
 
-    cursor.execute("SELECT weak_subjects FROM students where student_id=%s", (student_id,))
+    cursor.execute("SELECT weak_subjects FROM students where student_id=%s", (int(student_id),))
     weak_subjects = {}
 
     for sub_id in cursor.fetchone()["weak_subjects"].split(","):
         cursor.execute("SELECT * FROM subjects where subject_id=%s", (int(sub_id),))
         weak_subjects[cursor.fetchone()["subject_name"]] = sub_id
 
-    return render_template('graph.html', student_id=student_id, graph_path=graph_path, weak_subjects=weak_subjects)
+    return render_template('ngraph.html', student_id=student_id, graph_path=graph_path, weak_subjects=weak_subjects)
 
 @app.route('/make_graph', methods=['POST'])
 def make_graph():
@@ -617,6 +617,10 @@ def make_graph():
     query = {"studentid": student_id, "graph_path" : f'temp_{student_id}_{subject_id}_{i}.png'}
     query = parse.urlencode(query)
     return redirect('/view_graph' + '?' + query)
+
+@app.route('/chabox')
+def chatbox():
+    return render_template('chatbot.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

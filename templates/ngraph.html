@@ -1,25 +1,54 @@
-<!DOCTYPE html>
+{% extends 'Parent-Dash/base.html' %}
+
+{% block content %}
+    <!DOCTYPE html>
 <html>
 <head>
     <title>Simple Form</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #f4f4f4; /* Adds a light background color */
+        color: #333; /* Sets a default text color */
+        line-height: 1.6; /* Improves readability */
+    }
 
-        label {
-            margin-right: 10px;
-        }
+    label {
+        margin-right: 10px;
+        font-weight: bold; /* Makes labels stand out */
+        display: inline-block; /* Aligns labels better with inputs */
+        margin-bottom: 5px; /* Adds space between label and input */
+    }
 
-        input, button {
-            margin-bottom: 10px;
-        }
+    input, button {
+        margin-bottom: 10px;
+        padding: 8px; /* Adds padding for better touch interaction */
+        border: 1px solid #ddd; /* Adds subtle border */
+        border-radius: 4px; /* Rounds the corners */
+    }
 
-        .graph-image {
-            margin-top: 20px;
-        }
-    </style>
+    button {
+        background-color: #5cb85c; /* Adds color to buttons */
+        color: white; /* Makes button text stand out */
+        border: none; /* Removes default border */
+        cursor: pointer; /* Changes cursor to indicate action */
+    }
+
+    button:hover {
+        background-color: #4cae4c; /* Changes color on hover for feedback */
+    }
+
+    .graph-image {
+        margin-top: 20px;
+        border: 1px solid #ddd; /* Adds border to images */
+        padding: 5px; /* Adds spacing inside the border */
+        display: block; /* Ensures it takes full width */
+        margin-left: auto; /* Centers the image */
+        margin-right: auto;
+    }
+</style>
+
 </head>
 <body>
     <form id="dataForm" action="/make_graph" method="post">
@@ -66,3 +95,5 @@
     </script>
 </body>
 </html>
+
+{% endblock %}

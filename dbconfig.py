@@ -3,7 +3,7 @@ import mysql.connector
 db_config = {
     'host': 'localhost',
     'user': 'root',
-    'password': 'pranav05',
+    'password': 'admin@21',
     'database': 'sportal'
 }
 
