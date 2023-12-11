@@ -52,7 +52,6 @@
     
     {% if role_id == 1 %}
     <button onclick="addGradeRow()">Add Grade</button>
-    <button onclick="removeSelectedRows()">Remove Selected</button>
     <div class="checkbox-container"></div>
     {% endif %}
 
@@ -117,20 +116,6 @@
           }
         };
         xhr.send(JSON.stringify(gradeData));
-      }
-
-      function removeSelectedRows() {
-        var table = document.getElementById("gradesRecordTable");
-        var checkboxes = document.getElementsByClassName("delete-checkbox");
-
-        for (var i = checkboxes.length - 1; i >= 0; i--) {
-          if (checkboxes[i].checked) {
-            var row = checkboxes[i].closest("tr");
-            table.deleteRow(row.rowIndex);
-            // Optionally, send delete request for each deleted row
-            // sendDeleteRequest(rowData); // Implement as needed
-          }
-        }
       }
 
 

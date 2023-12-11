@@ -115,9 +115,6 @@
     <button class="button-container" onclick="addRow({{ all_subjects }})">
       Create
     </button>
-    <button class="button-container" onclick="toggleDeleteMode()">
-      Delete
-    </button>
     <div class="checkbox-container"></div>
     {% endif %}
     <script
@@ -189,7 +186,6 @@
           JSON.stringify({ name: studentName, weak_subjects: subjects_ })
         );
       }
-      var deleteMode = false;
 
       function viewGrades(studentID) {
         window.location.href =

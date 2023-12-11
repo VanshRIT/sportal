@@ -297,7 +297,7 @@ def get_total_ungraded():
     query = """
     SELECT COUNT(*) as total_ungraded
     FROM tasks t
-    LEFT JOIN grades g ON t.student_id = g.student_id AND t.subject = g.subject
+    LEFT JOIN grades g ON t.student_id = g.student_id AND t.subject_id = g.subject_id
     WHERE g.score IS NULL;
     """
     cursor.execute(query)

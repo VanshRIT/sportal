@@ -129,7 +129,10 @@ def students():
         user_id = session['user_id']
         logged_in_user = session['username']
         role_id = session['role_id']
-
+    else:
+        # Redirect to the login page if the user is not logged in
+        return redirect(url_for('login'))
+    
     students_list = []
     
     cursor.execute("SELECT * FROM subjects")
@@ -193,7 +196,10 @@ def grades():
         user_id = session['user_id']
         logged_in_user = session['username']
         role_id = session['role_id']
-
+    else:
+        # Redirect to the login page if the user is not logged in
+        return redirect(url_for('login'))
+    
     student_id = request.args.get('studentid', '')
 
     cursor.execute("SELECT * FROM grades WHERE student_id = %s",
@@ -201,32 +207,41 @@ def grades():
     
     grades_list = []
     
-    for grade in cursor.fetchall():
-        cursor.execute("SELECT * FROM subjects WHERE subject_id=%s", (grade["subject_id"], ))
-        grades_list.append((grade['item'], cursor.fetchone()["subject_name"], grade['score'], grade['date']))
-        
-    
-    cursor.execute("SELECT weak_subjects FROM students where student_id=%s", (student_id,))
-    weak_subjects = [int(i) for i in cursor.fetchone()["weak_subjects"].split(",")]
+    weak_subjects = {}
+    teacher_id = 0
 
-    
-    for i, sub_id in enumerate(weak_subjects):
-        cursor.execute("SELECT * FROM subjects where subject_id=%s", (sub_id,))
-        weak_subjects[i] = cursor.fetchone()
-
-    cursor.execute(
-            "SELECT teacher_id FROM teachers WHERE user_id = %s", (user_id,)
-        )
-
-    teacher_id = cursor.fetchone()["teacher_id"]
-
-    temp_weak_subjects = {}
-
-    for sub in weak_subjects:
-        if sub["teacher_id"] == teacher_id:
-            temp_weak_subjects[sub["subject_name"]] = sub["subject_id"]
+    if role_id == 1:
+        for grade in cursor.fetchall():
+            cursor.execute("SELECT * FROM subjects WHERE subject_id=%s", (grade["subject_id"], ))
+            grades_list.append((grade['item'], cursor.fetchone()["subject_name"], grade['score'], grade['date']))
             
-    weak_subjects = temp_weak_subjects
+        
+        cursor.execute("SELECT weak_subjects FROM students where student_id=%s", (student_id,))
+        weak_subjects = [int(i) for i in cursor.fetchone()["weak_subjects"].split(",")]
+
+        
+        for i, sub_id in enumerate(weak_subjects):
+            cursor.execute("SELECT * FROM subjects where subject_id=%s", (sub_id,))
+            weak_subjects[i] = cursor.fetchone()
+        print(user_id)
+        cursor.execute(
+                "SELECT teacher_id FROM teachers WHERE user_id = %s", (user_id,)
+            )
+
+        teacher_id = cursor.fetchone()["teacher_id"]
+
+        temp_weak_subjects = {}
+
+        for sub in weak_subjects:
+            if sub["teacher_id"] == teacher_id:
+                temp_weak_subjects[sub["subject_name"]] = sub["subject_id"]
+                
+        weak_subjects = temp_weak_subjects
+    
+    if role_id == 3:
+         for grade in cursor.fetchall():
+            cursor.execute("SELECT * FROM subjects WHERE subject_id=%s", (grade["subject_id"], ))
+            grades_list.append((grade['item'], cursor.fetchone()["subject_name"], grade['score'], grade['date']))
 
     return render_template('grades.html', grades_list=grades_list, role_id=role_id, weak_subjects=weak_subjects, teacher_id=teacher_id)
 
@@ -252,7 +267,10 @@ def tasks():
         user_id = session['user_id']
         logged_in_user = session['username']
         role_id = session['role_id']
-
+    else:
+        # Redirect to the login page if the user is not logged in
+        return redirect(url_for('login'))
+    
     student_id = request.args.get('studentid', '')
 
     cursor.execute("SELECT * FROM tasks WHERE student_id = %s",
@@ -326,7 +344,10 @@ def add_task():
         user_id = session['user_id']
         logged_in_user = session['username']
         role_id = session['role_id']
-
+    else:
+        # Redirect to the login page if the user is not logged in
+        return redirect(url_for('login'))
+    
     data = request.form.to_dict()
 
     student_id = data['studentid']
@@ -367,6 +388,9 @@ def submit_task():
         user_id = session['user_id']
         logged_in_user = session['username']
         role_id = session['role_id']
+    else:
+        # Redirect to the login page if the user is not logged in
+        return redirect(url_for('login'))
 
     data = request.form.to_dict()
 
@@ -393,6 +417,9 @@ def grade_task():
         user_id = session['user_id']
         logged_in_user = session['username']
         role_id = session['role_id']
+    else:
+        # Redirect to the login page if the user is not logged in
+        return redirect(url_for('login'))
 
     data = request.form.to_dict()
 
@@ -502,7 +529,10 @@ def view_graph():
         user_id = session['user_id']
         logged_in_user = session['username']
         role_id = session['role_id']
-
+    else:
+        # Redirect to the login page if the user is not logged in
+        return redirect(url_for('login'))
+    
     student_id = request.args.get('studentid','')
     graph_path = request.args.get('graph_path', '')
 
